@@ -9,8 +9,13 @@
   <version>1.0-SNAPSHOT</version>  
   <packaging>war</packaging>
 
+  <name>SCC Maven Webapp</name>
+  <url>https://scc2122-app-westeurope-adrqrd.azurewebsites.net/rest/ctrl/version</url>
+
   <properties> 
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> 
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
   </properties>  
 
   <dependencies>
@@ -105,53 +110,70 @@
       <artifactId>azure-storage</artifactId>  
       <version>8.6.6</version> 
     </dependency> 
-  </dependencies>  
+  </dependencies>
+
   <build> 
-    <sourceDirectory>src</sourceDirectory>  
-    <plugins> 
-      <plugin> 
-        <artifactId>maven-compiler-plugin</artifactId>  
-        <version>3.8.0</version>  
-        <configuration> 
-          <source>11</source>  
-          <target>11</target> 
-        </configuration> 
-      </plugin>  
-      <plugin> 
-        <artifactId>maven-war-plugin</artifactId>  
-        <version>3.2.2</version>  
-        <configuration> 
-          <warSourceDirectory>WebContent</warSourceDirectory> 
-        </configuration> 
-      </plugin>  
-      <plugin> 
-        <groupId>com.microsoft.azure</groupId>  
-        <artifactId>azure-webapp-maven-plugin</artifactId>  
-        <version>2.1.0</version>  
-        <configuration> 
-          <schemaVersion>V2</schemaVersion>  
-          <authType>azure_cli</authType>  
-          <pricingTier>F1</pricingTier>  
-          <region>westeurope</region>  
-          <runtime> 
-            <os>linux</os>  
-            <javaVersion>java11</javaVersion>  
-            <webContainer>TOMCAT 9.0</webContainer> 
-          </runtime>  
-          <deployment> 
-            <resources> 
-              <resource> 
-                <directory>${project.basedir}/target</directory>  
-                <includes> 
-                  <include>*.war</include> 
-                </includes> 
-              </resource> 
-            </resources> 
-          </deployment>  
-          <resourceGroup>scc2122app-rg-n49067n52405n45081</resourceGroup>
-          <appName>scc2122app-westeurope-n49067n52405n45081</appName>
-        </configuration> 
-      </plugin> 
-    </plugins> 
+    <sourceDirectory>src</sourceDirectory>
+    <pluginManagement>
+        <plugins>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.1.0</version>
+          </plugin>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.0.2</version>
+          </plugin>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.0</version>
+          </plugin>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.22.1</version>
+          </plugin>
+          <plugin>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>3.2.2</version>
+            <configuration>
+              <warSourceDirectory>WebContent</warSourceDirectory>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.5.2</version>
+          </plugin>
+        </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>com.microsoft.azure</groupId>
+        <artifactId>azure-webapp-maven-plugin</artifactId>
+        <version>2.1.0</version>
+        <configuration>
+          <schemaVersion>V2</schemaVersion>
+          <authType>azure_cli</authType>
+          <pricingTier>F1</pricingTier>
+          <region>westeurope</region>
+          <runtime>
+            <os>linux</os>
+            <javaVersion>java11</javaVersion>
+            <webContainer>TOMCAT 9.0</webContainer>
+          </runtime>
+          <deployment>
+            <resources>
+              <resource>
+                <directory>${project.basedir}/target</directory>
+                <includes>
+                  <include>*.war</include>
+                </includes>
+              </resource>
+            </resources>
+          </deployment>
+          <resourceGroup>scc2122-rg-westeurope-adrqrd</resourceGroup>
+          <appName>scc2122-app-westeurope-adrqrd</appName>
+        </configuration>
+      </plugin>
+    </plugins>
   </build> 
 </project>

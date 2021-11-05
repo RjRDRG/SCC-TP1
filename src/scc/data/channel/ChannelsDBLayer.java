@@ -18,7 +18,7 @@ import scc.cache.Cache;
 public class ChannelsDBLayer {
 	private static final String CONNECTION_URL = "https://scc52405.documents.azure.com:443/";
 	private static final String DB_KEY = "YZ6iGrfNxSlizVpeX0d7GFG7AEL9Zl9fub1kgaGke1vFIIx9X4MEKyeeKuYzLafJVdNfB9qw2w4pCdFzqpECBA==";
-	private static final String DB_NAME = "scc2122db-n49067n52405n45081";
+	private static final String DB_NAME = "scc2122dbadrqrd";
 
 	private static ChannelsDBLayer instance;
 

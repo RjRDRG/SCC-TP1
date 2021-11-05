@@ -1,23 +1,9 @@
 
-
-#create azure auth:  (required for automatic deployment of resources)
-az ad sp create-for-rbac --sdk-auth > azure.auth
-
-#Compile project:
-mvn compile assembly:single
+#Login to azure
+az login
 
 #Deploy project
 mvn compile package azure-webapp:deploy
-
-
-
-#Create resources:
-java -cp target/scc2122-mgt-1.0-jar-with-dependencies.jar scc.mgt.AzureManagement
-
-#Delete resources:
-java -cp target/scc2122-mgt-1.0-jar-with-dependencies.jar scc.mgt.AzureManagement -delete
-
-
 
 
 #Command to set app name:

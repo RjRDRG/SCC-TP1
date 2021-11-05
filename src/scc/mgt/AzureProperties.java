@@ -1,4 +1,4 @@
-package scc.utils;
+package scc.mgt;
 
 import javax.servlet.ServletContext;
 import java.io.FileInputStream;
