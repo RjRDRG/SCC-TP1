@@ -1,0 +1,16 @@
+
+
+#create azure auth:  (required for automatic deployment of resources)
+az ad sp create-for-rbac --sdk-auth > azure.auth
+
+#Command to set application settings in Azure:
+az functionapp config appsettings set --name app_name --resource-group res_group_name --settings "PROP=VAL”
+
+#Compile project:
+mvn compile assembly:single
+
+#Run the program as follows to create resources:
+java -cp target/scc2122-mgt-1.0-jar-with-dependencies.jar scc.mgt.AzureManagement
+
+#Run the program as follows to delete resources:
+java -cp target/scc2122-mgt-1.0-jar-with-dependencies.jar scc.mgt.AzureManagement -delete
