@@ -50,34 +50,34 @@ public class AzureManagement {
 	static final boolean CREATE_REDIS = true;
 
 	// TODO: change your suffix and other names if you want
-	static final String MY_SUFFIX = "Tp1_49067_52405_45081"; // Add your suffix here
+	static final String MY_SUFFIX = "n49067n52405n45081"; // Add your suffix here
 	
-	static final String AZURE_COSMOSDB_NAME = "scc2122" + MY_SUFFIX;	// Cosmos DB account name
-	static final String AZURE_COSMOSDB_DATABASE = "scc2122db" + MY_SUFFIX;	// Cosmos DB database name
+	static final String AZURE_COSMOSDB_NAME = "scc2122-" + MY_SUFFIX;	// Cosmos DB account name
+	static final String AZURE_COSMOSDB_DATABASE = "scc2122db-" + MY_SUFFIX;	// Cosmos DB database name
 	static final String[] BLOB_CONTAINERS = { "images" };	// Containers to add to the blob storage
 
 	static final Region[] REGIONS = new Region[] { Region.EUROPE_WEST }; // Define the regions to deploy resources here
 	
-	// Name of resoruce group for each region
+	// Name of resource group for each region
 	static final String[] AZURE_RG_REGIONS = Arrays.stream(REGIONS)
 			.map(reg -> "scc2122-rg-" + reg.name() + "-" + MY_SUFFIX).toArray(String[]::new);
 
 	// Name of application server to be launched in each regions -- launching the application
 	// server must be done using mvn, as you have been doing
 	// TODO: this name should be the same as defined in your app
-	static final String[] AZURE_APP_NAME = Arrays.stream(REGIONS).map(reg -> "scc2122app" + reg.name() + MY_SUFFIX)
+	static final String[] AZURE_APP_NAME = Arrays.stream(REGIONS).map(reg -> "scc2122app-" + reg.name() + "-" + MY_SUFFIX)
 			.toArray(String[]::new);
 
 	// Name of Blob storage account
-	static final String[] AZURE_STORAGE_NAME = Arrays.stream(REGIONS).map(reg -> "sccstore" + reg.name() + MY_SUFFIX)
+	static final String[] AZURE_STORAGE_NAME = Arrays.stream(REGIONS).map(reg -> "sccstore-" + reg.name() + "-" +  MY_SUFFIX)
 			.toArray(String[]::new);
 	
 	// Name of Redis server to be defined
-	static final String[] AZURE_REDIS_NAME = Arrays.stream(REGIONS).map(reg -> "redis" + reg.name() + MY_SUFFIX)
+	static final String[] AZURE_REDIS_NAME = Arrays.stream(REGIONS).map(reg -> "redis-" + reg.name() + "-" +  MY_SUFFIX)
 			.toArray(String[]::new);
 		
 	// Name of Azure functions to be launched in each regions
-	static final String[] AZURE_FUNCTIONS_NAME = Arrays.stream(REGIONS).map(reg -> "scc2122fun" + reg.name() + MY_SUFFIX)
+	static final String[] AZURE_FUNCTIONS_NAME = Arrays.stream(REGIONS).map(reg -> "scc2122fun-" + reg.name() + "-" +  MY_SUFFIX)
 			.toArray(String[]::new);
 
 	// Name of property file with keys and URLS to access resources

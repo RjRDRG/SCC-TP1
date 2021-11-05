@@ -148,8 +148,8 @@
               </resource> 
             </resources> 
           </deployment>  
-          <resourceGroup>scc2122app-rg-Tp1_49067_52405_45081</resourceGroup>
-          <appName>scc2122app-Tp1_49067_52405_45081</appName>
+          <resourceGroup>scc2122app-rg-n49067n52405n45081</resourceGroup>
+          <appName>scc2122app-westeurope-n49067n52405n45081</appName>
         </configuration> 
       </plugin> 
     </plugins> 
