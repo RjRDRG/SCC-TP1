@@ -4,7 +4,9 @@ import scc.data.user.User;
 import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,11 +17,10 @@ import java.util.UUID;
 @Path("/users")
 public class UsersResource
 {
-	final UsersDBLayer dbLayer;
+	@Context
+	ServletContext context;
 
-	public UsersResource() {
-		dbLayer = UsersDBLayer.getInstance();
-	}
+	public UsersResource() {}
 
 	/**
 	 * Create a new user.
@@ -32,7 +33,7 @@ public class UsersResource
 		String userId = UUID.randomUUID().toString();
 		user.setId(userId);
 
-		if(dbLayer.putUser(new UserDAO(user)).getStatusCode() >= 400)
+		if(UsersDBLayer.getInstance(context).putUser(new UserDAO(user)).getStatusCode() >= 400)
 			throw new BadRequestException();
 
 		return userId;
@@ -45,7 +46,7 @@ public class UsersResource
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(User user) {
-		if(dbLayer.updateUser(new UserDAO(user)).getStatusCode() >= 400)
+		if(UsersDBLayer.getInstance(context).updateUser(new UserDAO(user)).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 
@@ -55,7 +56,7 @@ public class UsersResource
 	@DELETE
 	@Path("/{id}")
 	public void delete(@PathParam("id") String id) {
-		if(dbLayer.delUserById(id).getStatusCode() >= 400)
+		if(UsersDBLayer.getInstance(context).delUserById(id).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 
@@ -66,7 +67,7 @@ public class UsersResource
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public User get(@PathParam("id") String id) {
-		Optional<UserDAO> userDAO = dbLayer.getUserById(id).stream().findFirst();
+		Optional<UserDAO> userDAO = UsersDBLayer.getInstance(context).getUserById(id).stream().findFirst();
 		if(userDAO.isEmpty())
 			throw new NotFoundException();
 

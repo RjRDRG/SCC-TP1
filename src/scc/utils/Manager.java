@@ -17,7 +17,7 @@ import scc.data.user.UsersDBLayer;
 
 public class Manager {
 
-	
+	/*
 
 	private static ChannelsDBLayer channels;
 	private static UsersDBLayer users;
@@ -34,7 +34,7 @@ public class Manager {
 			String photoId = "1:" + System.currentTimeMillis();
 			UserDAO user = new UserDAO(id, name, pwd, photoId, new String[0]);
 
-			try (Jedis jedis = Cache.getCachePool().getResource()) {
+			try (Jedis jedis = Cache.getInstance().getResource()) {
 				jedis.set("user:" + id, new ObjectMapper().writeValueAsString(user));
 			}
 			users.putUser(user);
@@ -63,7 +63,7 @@ public class Manager {
 				cnt += limit;
 			}
 
-			try (Jedis jedis = Cache.getCachePool().getResource()) {
+			try (Jedis jedis = Cache.getInstance().getResource()) {
 				jedis.del(userId);
 			}
 			changeMessagesFrom(userId);
@@ -77,7 +77,7 @@ public class Manager {
 	public void updateUser(String id, String name, String pwd, String pathToPhoto, String[] channels) {
 		UserDAO u = null;
 		ObjectMapper mapper = new ObjectMapper();
-		try (Jedis jedis = Cache.getCachePool().getResource()) {
+		try (Jedis jedis = Cache.getInstance().getResource()) {
 			String res = jedis.get(id);
 			if (res != null) {
 				u = mapper.readValue(res, UserDAO.class);
@@ -122,7 +122,7 @@ public class Manager {
 
 			MessageDAO msg = new MessageDAO(msgId, senderId, dest, text, photoId, channelId, replied);
 
-			try (Jedis jedis = Cache.getCachePool().getResource()) {
+			try (Jedis jedis = Cache.getInstance().getResource()) {
 				jedis.set("msg:" + msgId, mapper.writeValueAsString(msg));
 			}
 			messages.putMsg(msg);
@@ -133,7 +133,7 @@ public class Manager {
 	}
 
 	public void deleteMessage(String id) {
-		try (Jedis jedis = Cache.getCachePool().getResource()) {
+		try (Jedis jedis = Cache.getInstance().getResource()) {
 			jedis.del(id);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -164,7 +164,7 @@ public class Manager {
 	public void deleteChannel(String id) {
 		ObjectMapper mapper = new ObjectMapper();
 		ChannelDAO ch = null;
-		try (Jedis jedis = Cache.getCachePool().getResource()) {
+		try (Jedis jedis = Cache.getInstance().getResource()) {
 			ch = mapper.readValue(jedis.get(id), ChannelDAO.class);
 			if (ch != null)
 				jedis.del(id);
@@ -188,7 +188,7 @@ public class Manager {
 	public void updateChannel(String id, String name, String ownerId, boolean publicChannel, String[] members) {
 		ObjectMapper mapper = new ObjectMapper();
 		ChannelDAO ch;
-		try (Jedis jedis = Cache.getCachePool().getResource()) {
+		try (Jedis jedis = Cache.getInstance().getResource()) {
 			ch = mapper.readValue(jedis.get(id), ChannelDAO.class);
 			if (ch != null) {
 				ch.setname(name);
@@ -235,7 +235,7 @@ public class Manager {
 			if (msg.getsend().equals(userId)) {
 				msg.setsend("Deleted User");
 				id = msg.getId();
-				try (Jedis jedis = Cache.getCachePool().getResource()) {
+				try (Jedis jedis = Cache.getInstance().getResource()) {
 					jedis.set("msg:" + id, mapper.writeValueAsString(msg));
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -244,5 +244,6 @@ public class Manager {
 			}
 		}
 	}
-	
+
+	*/
 }

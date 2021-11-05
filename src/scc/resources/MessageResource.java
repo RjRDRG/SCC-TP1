@@ -6,6 +6,7 @@ import scc.data.message.MessageDAO;
 import scc.data.message.MessagesDBLayer;
 
 import java.util.UUID;
+import javax.servlet.ServletContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -13,6 +14,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -21,11 +23,10 @@ import javax.ws.rs.core.MediaType;
 
 public class MessageResource {
 
-	final MessagesDBLayer dbLayer;
+	@Context
+	ServletContext context;
 
-	public MessageResource() {
-				dbLayer = MessagesDBLayer.getInstance();
-			}
+	public MessageResource() {}
 
 	/**
 	 * Create a new message.
@@ -38,7 +39,7 @@ public class MessageResource {
 		String messageId = UUID.randomUUID().toString();
 		message.setId(messageId);
 
-		if (dbLayer.putMsg(new MessageDAO(message)).getStatusCode() >= 400)
+		if (MessagesDBLayer.getInstance(context).putMsg(new MessageDAO(message)).getStatusCode() >= 400)
 			throw new BadRequestException();
 
 		return messageId;
@@ -51,7 +52,7 @@ public class MessageResource {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(Message message) {
-		if (dbLayer.updatemsg(new MessageDAO (message)).getStatusCode() >= 400)
+		if (MessagesDBLayer.getInstance(context).updatemsg(new MessageDAO (message)).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 
@@ -61,7 +62,7 @@ public class MessageResource {
 	@DELETE
 	@Path("/{id}")
 	public void delete(@PathParam("id") String id) {
-		if (dbLayer.delMsgById(id).getStatusCode() >= 400)
+		if (MessagesDBLayer.getInstance(context).delMsgById(id).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 

@@ -3,8 +3,11 @@ package scc.resources;
 import scc.data.channel.Channel;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
+import scc.data.user.UsersDBLayer;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
@@ -13,11 +16,10 @@ import java.util.UUID;
  */
 public class ChannelResource {
 
-	final ChannelsDBLayer dbLayer;
+	@Context
+	ServletContext context;
 
-	public ChannelResource() {
-			dbLayer = ChannelsDBLayer.getInstance();
-		}
+	public ChannelResource() {}
 
 	/**
 	 * Create a new channel.
@@ -30,7 +32,7 @@ public class ChannelResource {
 		String channelId = UUID.randomUUID().toString();
 		channel.setId(channelId);
 
-		if (dbLayer.putChannel(new ChannelDAO(channel)).getStatusCode() >= 400)
+		if (ChannelsDBLayer.getInstance(context).putChannel(new ChannelDAO(channel)).getStatusCode() >= 400)
 			throw new BadRequestException();
 
 		return channelId;
@@ -43,7 +45,7 @@ public class ChannelResource {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(Channel channel) {
-		if (dbLayer.updateChannel(new ChannelDAO(channel)).getStatusCode() >= 400)
+		if (ChannelsDBLayer.getInstance(context).updateChannel(new ChannelDAO(channel)).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 
@@ -53,7 +55,7 @@ public class ChannelResource {
 	@DELETE
 	@Path("/{id}")
 	public void delete(@PathParam("id") String id) {
-		if (dbLayer.delChannelById(id).getStatusCode() >= 400)
+		if (ChannelsDBLayer.getInstance(context).delChannelById(id).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 

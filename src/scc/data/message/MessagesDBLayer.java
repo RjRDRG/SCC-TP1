@@ -10,43 +10,47 @@ import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
+import scc.mgt.AzureProperties;
+
+import javax.servlet.ServletContext;
 
 
 public class MessagesDBLayer {
-	private static final String CONNECTION_URL = "https://scc52405.documents.azure.com:443/";
-	private static final String DB_KEY = "YZ6iGrfNxSlizVpeX0d7GFG7AEL9Zl9fub1kgaGke1vFIIx9X4MEKyeeKuYzLafJVdNfB9qw2w4pCdFzqpECBA==";
 	private static final String DB_NAME = "scc2122dbadrqrd";
-	
-	
+
 	private static MessagesDBLayer instance;
 
-	public static synchronized MessagesDBLayer getInstance() {
-		if( instance != null)
-			return instance;
+	public static synchronized MessagesDBLayer getInstance(ServletContext context) {
+		if( instance == null) {
+			CosmosClient client = new CosmosClientBuilder()
+					.endpoint(AzureProperties.getProperty(context, "COSMOSDB_URL"))
+					.key(AzureProperties.getProperty(context, "COSMOSDB_KEY"))
+					.gatewayMode()		// replace by .directMode() for better performance
+					.consistencyLevel(ConsistencyLevel.SESSION)
+					.connectionSharingAcrossClientsEnabled(true)
+					.contentResponseOnWriteEnabled(true)
+					.buildClient();
+			JedisPool cache = Cache.getInstance(context);
+			instance = new MessagesDBLayer(client, cache);
+		}
 
-		CosmosClient client = new CosmosClientBuilder()
-		         .endpoint(CONNECTION_URL)
-		         .key(DB_KEY)
-		         .gatewayMode()		// replace by .directMode() for better performance
-		         .consistencyLevel(ConsistencyLevel.SESSION)
-		         .connectionSharingAcrossClientsEnabled(true)
-		         .contentResponseOnWriteEnabled(true)
-		         .buildClient();
-		instance = new MessagesDBLayer( client);
 		return instance;
-		
 	}
 	
 	private CosmosClient client;
 	private CosmosDatabase db;
 	private CosmosContainer messages;
-	
-	public MessagesDBLayer(CosmosClient client) {
+	private final JedisPool cache;
+
+	public MessagesDBLayer(CosmosClient client, JedisPool cache) {
 		this.client = client;
+		this.cache = cache;
 	}
 	
 	private synchronized void init() {
@@ -65,17 +69,15 @@ public class MessagesDBLayer {
 	
 	public CosmosItemResponse<Object> delMsg (MessageDAO msg) {
 		init();
-		try (Jedis jedis = Cache.getCachePool().getResource()) {
-			jedis.del("message: " + msg.getId());
-		}
+		cache.getResource().del("message: " + msg.getId());
 		return messages.deleteItem(msg, new CosmosItemRequestOptions());
 	}
 	
 	public CosmosItemResponse<MessageDAO> putMsg(MessageDAO msg) {
 		init();
-		try (Jedis jedis = Cache.getCachePool().getResource()) {
-			jedis.set("message:" + msg.getId(), new ObjectMapper().writeValueAsString(msg));
-		} catch (Exception e) {
+		try {
+			cache.getResource().set("message:" + msg.getId(), new ObjectMapper().writeValueAsString(msg));
+		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 		return messages.createItem(msg);
@@ -98,9 +100,9 @@ public class MessagesDBLayer {
 	
 	public CosmosItemResponse<MessageDAO> updatemsg(MessageDAO msg) {
 		init();
-		try (Jedis jedis = Cache.getCachePool().getResource()) {
-			jedis.set("message:" + msg.getId(), new ObjectMapper().writeValueAsString(msg));
-		} catch (Exception e) {
+		try {
+			cache.getResource().set("message:" + msg.getId(), new ObjectMapper().writeValueAsString(msg));
+		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 		return messages.replaceItem(msg, msg.get_rid(), new PartitionKey(msg.getId()), new CosmosItemRequestOptions());

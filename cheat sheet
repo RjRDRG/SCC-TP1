@@ -5,6 +5,5 @@ az login
 #Deploy project
 mvn compile package azure-webapp:deploy
 
-
 #Command to set app name:
 az functionapp config appsettings set --name scc2122app-westeurope-n49067n52405n45081 --resource-group westeurope
