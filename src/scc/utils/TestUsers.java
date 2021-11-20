@@ -15,6 +15,7 @@ public class TestUsers
 {
 	public static void main(String[] args) {
 
+		/*
 		try {
 			Locale.setDefault(Locale.US);
 			UsersDBLayer db = UsersDBLayer.getInstance();
@@ -78,6 +79,7 @@ public class TestUsers
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		*/
 	}
 }
 

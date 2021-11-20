@@ -13,7 +13,6 @@ import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
 import scc.mgt.AzureProperties;
@@ -64,14 +63,14 @@ public class ChannelsDBLayer {
 
 	public CosmosItemResponse<Object> delChannel(ChannelDAO channel) {
 		init();
-		cache.getResource().del("channel: " + channel.getId());
+		cache.getResource().del("channel: " + channel.getIdChannel());
 		return channels.deleteItem(channel, new CosmosItemRequestOptions());
 	}
 
 	public CosmosItemResponse<ChannelDAO> putChannel(ChannelDAO channel) {
 		init();
 		try {
-			cache.getResource().set("channel:" + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			cache.getResource().set("channel:" + channel.getIdChannel(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -93,11 +92,11 @@ public class ChannelsDBLayer {
 	public CosmosItemResponse<ChannelDAO> updateChannel(ChannelDAO channel) {
 		init();
 		try {
-			cache.getResource().set("channel:" + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			cache.getResource().set("channel:" + channel.getIdChannel(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return channels.replaceItem(channel, channel.get_rid(),new PartitionKey(channel.getId()), new CosmosItemRequestOptions());
+		return channels.replaceItem(channel, channel.get_rid(),new PartitionKey(channel.getIdChannel()), new CosmosItemRequestOptions());
 	}
 
 	public void close() {

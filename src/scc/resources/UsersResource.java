@@ -31,7 +31,7 @@ public class UsersResource
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(User user) {
 		String userId = UUID.randomUUID().toString();
-		user.setId(userId);
+		user.setIdUser(userId);
 
 		if(UsersDBLayer.getInstance(context).putUser(new UserDAO(user)).getStatusCode() >= 400)
 			throw new BadRequestException();
@@ -73,4 +73,8 @@ public class UsersResource
 
 		return userDAO.get().toUser();
 	}
+
+	//TODO subscribe to channel
+
+	//TODO invite to channel
 }

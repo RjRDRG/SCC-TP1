@@ -3,7 +3,6 @@ package scc.resources;
 import scc.data.channel.Channel;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
-import scc.data.user.UsersDBLayer;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
@@ -30,7 +29,7 @@ public class ChannelResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(Channel channel) {
 		String channelId = UUID.randomUUID().toString();
-		channel.setId(channelId);
+		channel.setIdChannel(channelId);
 
 		if (ChannelsDBLayer.getInstance(context).putChannel(new ChannelDAO(channel)).getStatusCode() >= 400)
 			throw new BadRequestException();

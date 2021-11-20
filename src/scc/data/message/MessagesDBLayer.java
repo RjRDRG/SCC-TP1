@@ -13,7 +13,6 @@ import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
 import scc.mgt.AzureProperties;
@@ -69,14 +68,14 @@ public class MessagesDBLayer {
 	
 	public CosmosItemResponse<Object> delMsg (MessageDAO msg) {
 		init();
-		cache.getResource().del("message: " + msg.getId());
+		cache.getResource().del("message: " + msg.getIdMessage());
 		return messages.deleteItem(msg, new CosmosItemRequestOptions());
 	}
 	
 	public CosmosItemResponse<MessageDAO> putMsg(MessageDAO msg) {
 		init();
 		try {
-			cache.getResource().set("message:" + msg.getId(), new ObjectMapper().writeValueAsString(msg));
+			cache.getResource().set("message:" + msg.getIdMessage(), new ObjectMapper().writeValueAsString(msg));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -101,11 +100,11 @@ public class MessagesDBLayer {
 	public CosmosItemResponse<MessageDAO> updatemsg(MessageDAO msg) {
 		init();
 		try {
-			cache.getResource().set("message:" + msg.getId(), new ObjectMapper().writeValueAsString(msg));
+			cache.getResource().set("message:" + msg.getIdMessage(), new ObjectMapper().writeValueAsString(msg));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return messages.replaceItem(msg, msg.get_rid(), new PartitionKey(msg.getId()), new CosmosItemRequestOptions());
+		return messages.replaceItem(msg, msg.get_rid(), new PartitionKey(msg.getIdMessage()), new CosmosItemRequestOptions());
 		}
 
 	public void close() {

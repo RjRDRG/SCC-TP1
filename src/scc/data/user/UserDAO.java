@@ -8,7 +8,7 @@ import java.util.Arrays;
 public class UserDAO {
 	private String _rid;
 	private String _ts;
-	private String id;
+	private String idUser;
 	private String name;
 	private String pwd;
 	private String photoId;
@@ -17,12 +17,12 @@ public class UserDAO {
 	public UserDAO() {
 	}
 	public UserDAO( User u) {
-		this(u.getId(), u.getName(), u.getPwd(), u.getPhotoId(), u.getChannelIds());
+		this(u.getIdUser(), u.getName(), u.getPwd(), u.getPhotoId(), u.getChannelIds());
 	}
 	
-	public UserDAO(String id, String name, String pwd, String photoId, String[] channelIds) {
+	public UserDAO(String idUser, String name, String pwd, String photoId, String[] channelIds) {
 		super();
-		this.id = id;
+		this.idUser = idUser;
 		this.name = name;
 		this.pwd = pwd;
 		this.photoId = photoId;
@@ -41,11 +41,11 @@ public class UserDAO {
 	public void set_ts(String _ts) {
 		this._ts = _ts;
 	}
-	public String getId() {
-		return id;
+	public String getIdUser() {
+		return idUser;
 	}
-	public void setId(String id) {
-		this.id = id;
+	public void setIdUser(String idUser) {
+		this.idUser = idUser;
 	}
 	public String getName() {
 		return name;
@@ -72,11 +72,11 @@ public class UserDAO {
 		this.channelIds = channelIds;
 	}
 	public User toUser() {
-		return new User( id, name, pwd, photoId, channelIds == null ? null : Arrays.copyOf(channelIds,channelIds.length));
+		return new User(idUser, name, pwd, photoId, channelIds == null ? null : Arrays.copyOf(channelIds,channelIds.length));
 	}
 	@Override
 	public String toString() {
-		return "UserDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", name=" + name + ", pwd=" + pwd
+		return "UserDAO [_rid=" + _rid + ", _ts=" + _ts + ", idUser=" + idUser + ", name=" + name + ", pwd=" + pwd
 				+ ", photoId=" + photoId + ", channelIds=" + Arrays.toString(channelIds) + "]";
 	}
 

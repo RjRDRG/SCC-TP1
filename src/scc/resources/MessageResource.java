@@ -37,7 +37,7 @@ public class MessageResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(Message message) {
 		String messageId = UUID.randomUUID().toString();
-		message.setId(messageId);
+		message.setIdMessage(messageId);
 
 		if (MessagesDBLayer.getInstance(context).putMsg(new MessageDAO(message)).getStatusCode() >= 400)
 			throw new BadRequestException();

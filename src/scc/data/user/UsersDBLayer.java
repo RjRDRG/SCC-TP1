@@ -13,7 +13,6 @@ import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
 import scc.mgt.AzureProperties;
@@ -69,14 +68,14 @@ public class UsersDBLayer {
 	
 	public CosmosItemResponse<Object> delUser(UserDAO user) {
 		init();
-		cache.getResource().del("user: " + user.getId());
+		cache.getResource().del("user: " + user.getIdUser());
 		return users.deleteItem(user, new CosmosItemRequestOptions());
 	}
 	
 	public CosmosItemResponse<UserDAO> putUser(UserDAO user) {
 		init();
 		try {
-			cache.getResource().set("user:" + user.getId(), new ObjectMapper().writeValueAsString(user));
+			cache.getResource().set("user:" + user.getIdUser(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -92,12 +91,12 @@ public class UsersDBLayer {
 		init();
 
 		try {
-			cache.getResource().set("user:" + user.getId(), new ObjectMapper().writeValueAsString(user));
+			cache.getResource().set("user:" + user.getIdUser(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 
-		return users.replaceItem(user, user.get_rid(),new PartitionKey(user.getId()), new CosmosItemRequestOptions());		
+		return users.replaceItem(user, user.get_rid(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions());
 	}
 
 	
