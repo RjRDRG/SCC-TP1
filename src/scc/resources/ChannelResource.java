@@ -13,6 +13,7 @@ import java.util.UUID;
 /**
  * Resource for managing channels.
  */
+@Path("/channel")
 public class ChannelResource {
 
 	@Context

@@ -10,7 +10,7 @@
   <packaging>war</packaging>
 
   <name>SCC Maven Webapp</name>
-  <url>https://scc2122-app-westeurope-adrqrd.azurewebsites.net/rest/ctrl/version</url>
+  <url>https://scc2122-app-westeurope-adrqrd.azurewebsites.net/</url>
 
   <properties> 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -170,8 +170,8 @@
               </resource>
             </resources>
           </deployment>
-          <resourceGroup>scc2122-rg-westeurope-adrqrd</resourceGroup>
-          <appName>scc2122-app-westeurope-adrqrd</appName>
+          <resourceGroup>scc2122-rg-westeurope-rodrigo</resourceGroup>
+          <appName>scc2122-app-westeurope-rodrigo</appName>
         </configuration>
       </plugin>
     </plugins>
