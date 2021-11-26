@@ -60,9 +60,6 @@ public class UsersResource
 			throw new BadRequestException();
 	}
 
-	/**
-	 * Lists the ids of images stored.
-	 */
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)

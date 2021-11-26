@@ -1,7 +1,6 @@
 package scc.srv;
 
-import scc.resources.ControlResource;
-import scc.resources.MediaResource;
+import scc.resources.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,10 +16,12 @@ public class MainApplication extends Application
 		resources.add(ControlResource.class);
 		resources.add(MediaResource.class);
 		singletons.add(new MediaResource());
-		resources.add(MediaResource.class);
-		singletons.add(new MediaResource());
-		resources.add(MediaResource.class);
-		singletons.add(new MediaResource());
+		resources.add(MessageResource.class);
+		singletons.add(new MessageResource());
+		resources.add(ChannelResource.class);
+		singletons.add(new ChannelResource());
+		resources.add(UsersResource.class);
+		singletons.add(new UsersResource());
 	}
 
 	@Override

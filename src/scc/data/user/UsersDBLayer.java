@@ -20,7 +20,7 @@ import scc.mgt.AzureProperties;
 import javax.servlet.ServletContext;
 
 public class UsersDBLayer {
-	private static final String DB_NAME = "scc2122dbadrqrd";
+	private static final String DB_NAME = "scc2122db";
 	
 	private static UsersDBLayer instance;
 

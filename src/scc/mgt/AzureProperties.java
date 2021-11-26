@@ -23,6 +23,7 @@ public class AzureProperties
 		}
 		return props;
 	}
+
 	public static synchronized Properties getProperties() {
 		if( props == null || props.size() == 0) {
 			props = new Properties();

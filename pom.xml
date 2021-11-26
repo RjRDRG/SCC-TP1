@@ -170,8 +170,8 @@
               </resource>
             </resources>
           </deployment>
-          <resourceGroup>scc2122-rg-westeurope-rodrigo</resourceGroup>
-          <appName>scc2122-app-westeurope-rodrigo</appName>
+          <resourceGroup>scc2122-rg-westeurope-rjr</resourceGroup>
+          <appName>scc2122-app-westeurope-rjr</appName>
         </configuration>
       </plugin>
     </plugins>
