@@ -32,6 +32,10 @@ public class UserDAO {
 
 	}
 
+	public User toUser() {
+		return new User(idUser,name,pwd,photoId,channelIds);
+	}
+
 	public String get_rid() {
 		return _rid;
 	}

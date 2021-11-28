@@ -3,6 +3,8 @@ package scc.resources;
 import scc.data.channel.Channel;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
+import scc.data.user.User;
+import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
 
 import javax.servlet.ServletContext;
@@ -10,6 +12,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -17,9 +20,6 @@ import java.util.UUID;
  */
 @Path("/channel")
 public class ChannelResource {
-
-	@Context
-	ServletContext context;
 
 	public ChannelResource() {}
 
@@ -31,15 +31,25 @@ public class ChannelResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(@CookieParam("scc:session") Cookie session, Channel channel) {
-		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
+		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
 
 		String channelId = UUID.randomUUID().toString();
 		channel.setIdChannel(channelId);
 
-		if (ChannelsDBLayer.getInstance(context).putChannel(new ChannelDAO(channel)).getStatusCode() >= 400)
-			throw new BadRequestException();
+		ChannelsDBLayer.getInstance().putChannel(new ChannelDAO(channel));
 
 		return channelId;
+	}
+
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Channel get(@PathParam("id") String id) {
+		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
+		if(channel == null)
+			throw new NotFoundException();
+
+		return channel.toChannel();
 	}
 
 	/**
@@ -49,10 +59,9 @@ public class ChannelResource {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(@CookieParam("scc:session") Cookie session, Channel channel) {
-		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
+		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
 
-		if (ChannelsDBLayer.getInstance(context).updateChannel(new ChannelDAO(channel)).getStatusCode() >= 400)
-			throw new BadRequestException();
+		ChannelsDBLayer.getInstance().updateChannel(new ChannelDAO(channel));
 	}
 
 	/**
@@ -61,9 +70,10 @@ public class ChannelResource {
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
-		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
+		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
+		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
 
-		if (ChannelsDBLayer.getInstance(context).delChannelById(id).getStatusCode() >= 400)
+		if (!ChannelsDBLayer.getInstance().delChannelById(id))
 			throw new BadRequestException();
 	}
 

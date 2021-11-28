@@ -6,10 +6,8 @@ import com.azure.cosmos.CosmosClientBuilder;
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.CosmosDatabase;
 import com.azure.cosmos.models.CosmosItemRequestOptions;
-import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
-import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -169,28 +167,11 @@ public class MessagesDBLayer {
 		return messages.replaceItem(msg, msg.getIdMessage(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() < 400;
 	}
 
-public void deleteMessageByChannel(String channel) {
+	public void deleteChannelsMessages(String channel) {
 		init();
 		cache.getResource().del(RECENT_MSGS + channel);
-		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=" + channel, new CosmosQueryRequestOptions(),
-				MessageDAO.class);
+		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=" + channel, new CosmosQueryRequestOptions(), MessageDAO.class);
 	}
-	//commented cause not sure if it is to remove msgs if the users is deleted
-	//make sense msgs remain available
-	/*
-	public void deleteMessageByUser(String send) {
-		init();
-		List<String> lst = cache.getResource().lrange(RECENT_MSGS, 0, -1);
-		ObjectMapper mapper = new ObjectMapper();
-		MessageDAO m;
-		for (String s : lst) {
-			m = mapper.convertValue(s, MessageDAO.class);
-			if (m.getsend().equals(send))
-				delMsg(m);
-		}
-		messages.queryItems("DELETE FROM Messages WHERE Messages.send=" + send, new CosmosQueryRequestOptions(),
-				MessageDAO.class);
-	}*/
 
 	public void close() {
 		client.close();

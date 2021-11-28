@@ -1,5 +1,8 @@
 package scc.resources;
 
+import scc.data.authentication.Session;
+import scc.data.channel.ChannelDAO;
+import scc.data.channel.ChannelsDBLayer;
 import scc.data.user.User;
 import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
@@ -7,9 +10,10 @@ import scc.data.user.UsersDBLayer;
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Resource for managing users.
@@ -17,8 +21,6 @@ import java.util.UUID;
 @Path("/users")
 public class UsersResource
 {
-	@Context
-	ServletContext context;
 
 	public UsersResource() {}
 
@@ -33,8 +35,7 @@ public class UsersResource
 		String userId = UUID.randomUUID().toString();
 		user.setIdUser(userId);
 
-		if(UsersDBLayer.getInstance(context).putUser(new UserDAO(user)).getStatusCode() >= 400)
-			throw new BadRequestException();
+		UsersDBLayer.getInstance().putUser(new UserDAO(user));
 
 		return userId;
 	}
@@ -45,9 +46,9 @@ public class UsersResource
 	@POST
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public void update(User user) {
-		if(UsersDBLayer.getInstance(context).updateUser(new UserDAO(user)).getStatusCode() >= 400)
-			throw new BadRequestException();
+	public void update(@CookieParam("scc:session") Cookie session, User user) {
+		UsersDBLayer.getInstance().checkCookieUser(session,user.getIdUser());
+		UsersDBLayer.getInstance().updateUser(new UserDAO(user));
 	}
 
 	/**
@@ -55,23 +56,66 @@ public class UsersResource
 	 */
 	@DELETE
 	@Path("/{id}")
-	public void delete(@PathParam("id") String id) {
-		if(UsersDBLayer.getInstance(context).delUserById(id).getStatusCode() >= 400)
-			throw new BadRequestException();
+	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		UsersDBLayer.getInstance().checkCookieUser(session,id);
+		UsersDBLayer.getInstance().discardUserById(id);
 	}
 
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public User get(@PathParam("id") String id) {
-		Optional<UserDAO> userDAO = UsersDBLayer.getInstance(context).getUserById(id).stream().findFirst();
-		if(userDAO.isEmpty())
-			throw new NotFoundException();
-
-		return userDAO.get().toUser();
+	public User get(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		UsersDBLayer.getInstance().checkCookieUser(session,id);
+		return UsersDBLayer.getInstance().getUserById(id).toUser();
 	}
 
-	//TODO subscribe to channel
+	/**
+	 * Subscribe to a channel
+	 */
+	@POST
+	@Path("/subscribe/{id}/{channel}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void subscribe(@CookieParam("scc:session") Cookie session, @PathParam("id") String id, @PathParam("channel") String channel) {
+		UsersDBLayer.getInstance().checkCookieUser(session, id);
 
-	//TODO invite to channel
+		ChannelDAO channelDAO = ChannelsDBLayer.getInstance().getChannelById(channel);
+		UserDAO userDAO = UsersDBLayer.getInstance().getUserById(id);
+
+		if(channelDAO.isPublicChannel()) {
+			Set<String> channels = Arrays.stream(userDAO.getChannelIds()).collect(Collectors.toSet());
+			channels.add(channel);
+			userDAO.setChannelIds(channels.toArray(new String[0]));
+			UsersDBLayer.getInstance().updateUser(userDAO);
+
+			Set<String> members = Arrays.stream(channelDAO.getMembers()).collect(Collectors.toSet());
+			members.add(userDAO.getIdUser());
+			channelDAO.setMembers(members.toArray(new String[0]));
+			ChannelsDBLayer.getInstance().updateChannel(channelDAO);
+		}
+	}
+
+	/**
+	 * Invite a user to a channel
+	 */
+	@POST
+	@Path("/invite/{id}/{channel}/{other}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void invite(@CookieParam("scc:session") Cookie session, @PathParam("id") String id, @PathParam("channel") String channel, @PathParam("other") String other) {
+		UsersDBLayer.getInstance().checkCookieUser(session, id);
+
+		ChannelDAO channelDAO = ChannelsDBLayer.getInstance().getChannelById(channel);
+		UserDAO userDAO = UsersDBLayer.getInstance().getUserById(other);
+
+		if(Arrays.asList(channelDAO.getMembers()).contains(id)) {
+			Set<String> channels = Arrays.stream(userDAO.getChannelIds()).collect(Collectors.toSet());
+			channels.add(channel);
+			userDAO.setChannelIds(channels.toArray(new String[0]));
+			UsersDBLayer.getInstance().updateUser(userDAO);
+
+			Set<String> members = Arrays.stream(channelDAO.getMembers()).collect(Collectors.toSet());
+			members.add(id);
+			channelDAO.setMembers(members.toArray(new String[0]));
+			ChannelsDBLayer.getInstance().updateChannel(channelDAO);
+		}
+	}
 }

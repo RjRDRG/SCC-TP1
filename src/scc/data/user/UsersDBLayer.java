@@ -48,8 +48,8 @@ public class UsersDBLayer {
 	}
 	
 	private final CosmosClient client;
-	private CosmosContainer users;
 	private final JedisPool cache;
+	private CosmosContainer users;
 	
 	public UsersDBLayer(CosmosClient client, JedisPool cache) {
 		this.client = client;
@@ -62,17 +62,18 @@ public class UsersDBLayer {
 		users = db.getContainer("Users");
 	}
 
+	public void discardUserById(String id) {
+		init();
+		UserDAO userDAO = getUserById(id);
+		userDAO.setGarbage(true);
+		updateUser(userDAO);
+	}
+
 	public boolean delUserById(String id) {
 		init();
 		cache.getResource().del("user: " + id);
 		PartitionKey key = new PartitionKey(id);
 		return users.deleteItem(id, key, new CosmosItemRequestOptions()).getStatusCode() < 400;
-	}
-	
-	public boolean delUser(UserDAO user) {
-		init();
-		cache.getResource().del("user: " + user.getIdUser());
-		return users.deleteItem(user, new CosmosItemRequestOptions()).getStatusCode() < 400;
 	}
 	
 	public boolean putUser(UserDAO user) {
@@ -95,7 +96,7 @@ public class UsersDBLayer {
 				e.printStackTrace();
 			}
 		}
-		return users.queryItems("SELECT * FROM Users WHERE Users.id=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class).stream().findFirst().orElse(null);
+		return users.queryItems("SELECT * FROM Users WHERE Users.idUser=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class).stream().findFirst().orElse(null);
 	}
 	
 	public UserDAO updateUser(UserDAO user) {
@@ -107,7 +108,7 @@ public class UsersDBLayer {
 			e.printStackTrace();
 		}
 
-		return users.replaceItem(user, user.get_rid(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions()).getItem();
+		return users.replaceItem(user, user.getIdUser(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions()).getItem();
 	}
 
 	
@@ -144,15 +145,21 @@ public class UsersDBLayer {
 	 * Throws exception if not appropriate user for operation on Channel
 	 */
 	public Session checkCookieUser(Cookie session, String id) throws NotAuthorizedException {
-		//TODO AzureProperties.getProperty("ENABLE_ACCESS_CONTROL")
+		Session s = checkCookieUser(session);
+		if (!s.getIdUser().equals(id) && !s.getIdUser().equals("admin"))
+			throw new NotAuthorizedException("Invalid user : " + s.getIdUser());
+		return s;
+	}
 
+	/**
+	 * Throws exception if not appropriate user for operation on Channel
+	 */
+	private Session checkCookieUser(Cookie session) throws NotAuthorizedException {
 		if (session == null || session.getValue() == null)
 			throw new NotAuthorizedException("No session initialized");
 		Session s = getSession(session.getValue());
 		if (s == null || s.getIdUser() == null || s.getIdUser().length() == 0)
 			throw new NotAuthorizedException("No valid session initialized");
-		if (!s.getIdUser().equals(id) && !s.getIdUser().equals("admin"))
-			throw new NotAuthorizedException("Invalid user : " + s.getIdUser());
 		return s;
 	}
 

@@ -18,6 +18,8 @@ import scc.cache.Cache;
 import scc.mgt.AzureProperties;
 
 import javax.servlet.ServletContext;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ChannelsDBLayer {
 	private static final String DB_NAME = "scc2122db";
@@ -55,48 +57,42 @@ public class ChannelsDBLayer {
 		channels = db.getContainer("Channels");
 	}
 
-	public CosmosItemResponse<Object> delChannelById(String id) {
+	public boolean delChannelById(String id) {
 		init();
 		PartitionKey key = new PartitionKey(id);
-		return channels.deleteItem(id, key, new CosmosItemRequestOptions());
+		return channels.deleteItem(id, key, new CosmosItemRequestOptions()).getStatusCode() < 400;
 	}
 
-	public CosmosItemResponse<Object> delChannel(ChannelDAO channel) {
-		init();
-		cache.getResource().del("channel: " + channel.getIdChannel());
-		return channels.deleteItem(channel, new CosmosItemRequestOptions());
-	}
-
-	public CosmosItemResponse<ChannelDAO> putChannel(ChannelDAO channel) {
+	public boolean putChannel(ChannelDAO channel) {
 		init();
 		try {
 			cache.getResource().set("channel:" + channel.getIdChannel(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return channels.createItem(channel);
+		return channels.createItem(channel).getStatusCode() < 400;
 	}
 
-	public CosmosPagedIterable<ChannelDAO> getChannelById(String id) {
+	public ChannelDAO getChannelById(String id) {
 		init();
-		return channels.queryItems("SELECT * FROM Channels WHERE Channels.id=\"" + id + "\"",
-				new CosmosQueryRequestOptions(), ChannelDAO.class);
+		return channels.queryItems("SELECT * FROM Channels WHERE Channels.idChannel=\"" + id + "\"",
+				new CosmosQueryRequestOptions(), ChannelDAO.class).stream().findFirst().orElse(null);
 	}
 
-	public CosmosPagedIterable<ChannelDAO> getChannels(int offset, int limit) {
+	public List<ChannelDAO> getChannels(int offset, int limit) {
 		init();
 		return channels.queryItems("SELECT * FROM Channels OFFSET " + offset + " LIMIT " + limit,
-				new CosmosQueryRequestOptions(), ChannelDAO.class);
+				new CosmosQueryRequestOptions(), ChannelDAO.class).stream().collect(Collectors.toList());
 	}
-	
-	public CosmosItemResponse<ChannelDAO> updateChannel(ChannelDAO channel) {
+
+	public ChannelDAO updateChannel(ChannelDAO channel) {
 		init();
 		try {
 			cache.getResource().set("channel:" + channel.getIdChannel(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return channels.replaceItem(channel, channel.get_rid(),new PartitionKey(channel.getIdChannel()), new CosmosItemRequestOptions());
+		return channels.replaceItem(channel, channel.getIdChannel(),new PartitionKey(channel.getIdChannel()), new CosmosItemRequestOptions()).getItem();
 	}
 
 	public void close() {

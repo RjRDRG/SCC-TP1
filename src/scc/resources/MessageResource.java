@@ -23,9 +23,6 @@ import javax.ws.rs.core.MediaType;
 
 public class MessageResource {
 
-	@Context
-	ServletContext context;
-
 	public MessageResource() {}
 
 	/**
@@ -39,8 +36,7 @@ public class MessageResource {
 		String messageId = UUID.randomUUID().toString();
 		message.setIdMessage(messageId);
 
-		if (MessagesDBLayer.getInstance(context).putMsg(new MessageDAO(message)).getStatusCode() >= 400)
-			throw new BadRequestException();
+		MessagesDBLayer.getInstance().putMsg(new MessageDAO(message));
 
 		return messageId;
 	}
@@ -52,8 +48,7 @@ public class MessageResource {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(Message message) {
-		if (MessagesDBLayer.getInstance(context).updatemsg(new MessageDAO (message)).getStatusCode() >= 400)
-			throw new BadRequestException();
+		MessagesDBLayer.getInstance().updateMessage(new MessageDAO (message));
 	}
 
 	/**
@@ -62,8 +57,7 @@ public class MessageResource {
 	@DELETE
 	@Path("/{id}")
 	public void delete(@PathParam("id") String id) {
-		if (MessagesDBLayer.getInstance(context).delMsgById(id).getStatusCode() >= 400)
-			throw new BadRequestException();
+		MessagesDBLayer.getInstance().delMsgById(id);
 	}
 
 }
