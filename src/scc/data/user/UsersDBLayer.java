@@ -27,18 +27,18 @@ public class UsersDBLayer {
 	
 	private static UsersDBLayer instance;
 
-	public static synchronized UsersDBLayer getInstance(ServletContext context) {
+	public static synchronized UsersDBLayer getInstance() {
 		if(instance == null) {
 			try {
 				CosmosClient client = new CosmosClientBuilder()
-						.endpoint(AzureProperties.getProperty(context, "COSMOSDB_URL"))
-						.key(AzureProperties.getProperty(context, "COSMOSDB_KEY"))
+						.endpoint(AzureProperties.getProperty("COSMOSDB_URL"))
+						.key(AzureProperties.getProperty("COSMOSDB_KEY"))
 						.gatewayMode()		// replace by .directMode() for better performance
 						.consistencyLevel(ConsistencyLevel.SESSION)
 						.connectionSharingAcrossClientsEnabled(true)
 						.contentResponseOnWriteEnabled(true)
 						.buildClient();
-				JedisPool cache = Cache.getInstance(context);
+				JedisPool cache = Cache.getInstance();
 				instance = new UsersDBLayer(client,cache);
 			} catch (Exception e) {
 				e.printStackTrace();

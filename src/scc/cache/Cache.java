@@ -10,8 +10,8 @@ public class Cache {
 	
 	private static JedisPool instance;
 	
-	public synchronized static JedisPool getInstance(ServletContext context) {
-		if( instance == null) {
+	public synchronized static JedisPool getInstance() {
+		if(instance == null) {
 			final JedisPoolConfig poolConfig = new JedisPoolConfig();
 			poolConfig.setMaxTotal(128);
 			poolConfig.setMaxIdle(128);
@@ -23,10 +23,10 @@ public class Cache {
 			poolConfig.setBlockWhenExhausted(true);
 			instance = new JedisPool(
 					poolConfig,
-					AzureProperties.getProperty(context, "REDIS_URL"),
+					AzureProperties.getProperty("REDIS_URL"),
 					6380,
 					1000,
-					AzureProperties.getProperty(context, "REDIS_KEY"),
+					AzureProperties.getProperty("REDIS_KEY"),
 					true
 			);
 		}

@@ -24,15 +24,15 @@ public class ChannelsDBLayer {
 
 	private static ChannelsDBLayer instance;
 
-	public static synchronized ChannelsDBLayer getInstance(ServletContext context) {
+	public static synchronized ChannelsDBLayer getInstance() {
 		if (instance == null) {
 			CosmosClient client = new CosmosClientBuilder()
-					.endpoint(AzureProperties.getProperty(context, "COSMOSDB_URL"))
-					.key(AzureProperties.getProperty(context, "COSMOSDB_KEY"))
+					.endpoint(AzureProperties.getProperty("COSMOSDB_URL"))
+					.key(AzureProperties.getProperty("COSMOSDB_KEY"))
 					.gatewayMode() // replace by .directMode() for better performance
 					.consistencyLevel(ConsistencyLevel.SESSION).connectionSharingAcrossClientsEnabled(true)
 					.contentResponseOnWriteEnabled(true).buildClient();
-			JedisPool cache = Cache.getInstance(context);
+			JedisPool cache = Cache.getInstance();
 			instance = new ChannelsDBLayer(client,cache);
 		}
 
@@ -40,9 +40,9 @@ public class ChannelsDBLayer {
 	}
 
 	private final CosmosClient client;
-	private CosmosDatabase db;
-	private CosmosContainer channels;
 	private final JedisPool cache;
+
+	private CosmosContainer channels;
 
 	public ChannelsDBLayer(CosmosClient client, JedisPool cache) {
 		this.client = client;
@@ -50,8 +50,8 @@ public class ChannelsDBLayer {
 	}
 
 	private synchronized void init() {
-		if (db != null) return;
-		db = client.getDatabase(DB_NAME);
+		if (channels != null) return;
+		CosmosDatabase db = client.getDatabase(DB_NAME);
 		channels = db.getContainer("Channels");
 	}
 

@@ -17,35 +17,39 @@ import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
 import scc.mgt.AzureProperties;
 
-import javax.servlet.ServletContext;
-
+import javax.ws.rs.NotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MessagesDBLayer {
 	private static final String DB_NAME = "scc2122db";
+	private static final String RECENT_MSGS = "MostRecentMsgs";
+	private static final int MAX_MSG_IN_CACHE = 20;
 
 	private static MessagesDBLayer instance;
 
-	public static synchronized MessagesDBLayer getInstance(ServletContext context) {
+	public static synchronized MessagesDBLayer getInstance() {
 		if( instance == null) {
 			CosmosClient client = new CosmosClientBuilder()
-					.endpoint(AzureProperties.getProperty(context, "COSMOSDB_URL"))
-					.key(AzureProperties.getProperty(context, "COSMOSDB_KEY"))
+					.endpoint(AzureProperties.getProperty("COSMOSDB_URL"))
+					.key(AzureProperties.getProperty("COSMOSDB_KEY"))
 					.gatewayMode()		// replace by .directMode() for better performance
 					.consistencyLevel(ConsistencyLevel.SESSION)
 					.connectionSharingAcrossClientsEnabled(true)
 					.contentResponseOnWriteEnabled(true)
 					.buildClient();
-			JedisPool cache = Cache.getInstance(context);
+			JedisPool cache = Cache.getInstance();
 			instance = new MessagesDBLayer(client, cache);
 		}
 
 		return instance;
 	}
 	
-	private CosmosClient client;
-	private CosmosDatabase db;
-	private CosmosContainer messages;
+	private final CosmosClient client;
 	private final JedisPool cache;
+
+	private CosmosContainer messages;
 
 	public MessagesDBLayer(CosmosClient client, JedisPool cache) {
 		this.client = client;
@@ -53,59 +57,140 @@ public class MessagesDBLayer {
 	}
 	
 	private synchronized void init() {
-		if( db != null)
-			return;
-		db = client.getDatabase(DB_NAME);
+		if(messages != null) return;
+		CosmosDatabase db = client.getDatabase(DB_NAME);
 		messages = db.getContainer("Messages");
 		
 	}
 
-	public CosmosItemResponse<Object> delMsgById(String id) {
+	public boolean delMsgById(String id) {
 		init();
-		PartitionKey key = new PartitionKey( id);
-		return messages.deleteItem(id, key, new CosmosItemRequestOptions());
+
+		MessageDAO msg = getMsgById(id);
+		if(msg == null)
+			throw new NotFoundException();
+
+		PartitionKey key = new PartitionKey(msg.getChannel());
+		if(messages.deleteItem(msg.getIdMessage(), key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
+			return false;
+
+		List<String> msgs = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
+
+		if(!msgs.isEmpty()) {
+			cache.getResource().del(RECENT_MSGS + msg.getChannel());
+
+			ObjectMapper mapper = new ObjectMapper();
+
+			for (String s : msgs) {
+				MessageDAO m = mapper.convertValue(s, MessageDAO.class);
+				if (!m.getIdMessage().equals(id)) {
+					cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), s);
+				}
+			}
+		}
+
+		return true;
 	}
 	
-	public CosmosItemResponse<Object> delMsg (MessageDAO msg) {
-		init();
-		cache.getResource().del("message: " + msg.getIdMessage());
-		return messages.deleteItem(msg, new CosmosItemRequestOptions());
-	}
-	
-	public CosmosItemResponse<MessageDAO> putMsg(MessageDAO msg) {
+	public boolean putMsg(MessageDAO msg) {
 		init();
 		try {
-			cache.getResource().set("message:" + msg.getIdMessage(), new ObjectMapper().writeValueAsString(msg));
+			Long cnt = cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), new ObjectMapper().writeValueAsString(msg));
+			if (cnt > MAX_MSG_IN_CACHE)
+				cache.getResource().ltrim(RECENT_MSGS + msg.getChannel(), 0, (MAX_MSG_IN_CACHE - 1));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-		return messages.createItem(msg);
+		return messages.createItem(msg).getStatusCode() < 400;
 	}
 	
-	public CosmosPagedIterable<MessageDAO> getMsgById( String id) {
+	public MessageDAO getMsgById(String id) {
 		init();
-		return messages.queryItems("SELECT * FROM Messages WHERE Messages.id=\"" + id + "\"", new CosmosQueryRequestOptions(), MessageDAO.class);
+		return messages.queryItems("SELECT * FROM Messages WHERE Messages.idMessage=\"" + id + "\"", new CosmosQueryRequestOptions(), MessageDAO.class).stream().findFirst().orElse(null);
 	}
 
-	public CosmosPagedIterable<MessageDAO> getMessages(int off, int limit) {
+	public List<MessageDAO> getMessages(String channel, int off, int limit) {
 		init();
-		return messages.queryItems("SELECT * FROM Messages OFFSET "+ off + "LIMIT " + limit, new CosmosQueryRequestOptions(), MessageDAO.class);
+		List<MessageDAO> messageDAOS = new ArrayList<>(limit);
+		ObjectMapper m = new ObjectMapper();
+
+		int cachedMessages = 0;
+
+		if(off < MAX_MSG_IN_CACHE) {
+			cachedMessages = Math.min(limit, MAX_MSG_IN_CACHE-off);
+			messageDAOS.addAll(cache.getResource().lrange(RECENT_MSGS + channel, off, Math.min(limit - 1, MAX_MSG_IN_CACHE - 1)).stream().map(
+					s -> {
+						try {
+							return m.readValue(s, MessageDAO.class);
+						} catch (JsonProcessingException e) {
+							e.printStackTrace();
+							throw new RuntimeException(e);
+						}
+					}
+			).collect(Collectors.toList()));
+		}
+
+		if(limit > cachedMessages) {
+			messageDAOS.addAll(
+					messages.queryItems(
+							"SELECT * FROM Messages WHERE Messages.channel=\"" + channel + "\" ORDER BY Messages._ts DESC OFFSET " + (off + cachedMessages) + "LIMIT " + (limit - cachedMessages),
+							new CosmosQueryRequestOptions(), MessageDAO.class
+					)
+					.stream().collect(Collectors.toList())
+			);
+		}
+
+		return messageDAOS;
 	}
 	
-	public CosmosPagedIterable<MessageDAO> getAllMessages() {
+	public boolean updateMessage(MessageDAO msg) {
 		init();
-		return messages.queryItems("SELECT * FROM Messages", new CosmosQueryRequestOptions(), MessageDAO.class);
+		List<String> lst = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
+		ObjectMapper mapper = new ObjectMapper();
+		for (String s : lst) {
+			MessageDAO m = null;
+			try {
+				m = mapper.readValue(s, MessageDAO.class);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+			if (msg.equals(m)) {
+				delMsgById(m.getIdMessage());
+				try {
+					cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), mapper.writeValueAsString(msg));
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+				}
+				break;
+			}
+		}
+		return messages.replaceItem(msg, msg.getIdMessage(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() < 400;
 	}
-	
-	public CosmosItemResponse<MessageDAO> updatemsg(MessageDAO msg) {
+
+public void deleteMessageByChannel(String channel) {
 		init();
-		try {
-			cache.getResource().set("message:" + msg.getIdMessage(), new ObjectMapper().writeValueAsString(msg));
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+		cache.getResource().del(RECENT_MSGS + channel);
+		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=" + channel, new CosmosQueryRequestOptions(),
+				MessageDAO.class);
+	}
+	//commented cause not sure if it is to remove msgs if the users is deleted
+	//make sense msgs remain available
+	/*
+	public void deleteMessageByUser(String send) {
+		init();
+		List<String> lst = cache.getResource().lrange(RECENT_MSGS, 0, -1);
+		ObjectMapper mapper = new ObjectMapper();
+		MessageDAO m;
+		for (String s : lst) {
+			m = mapper.convertValue(s, MessageDAO.class);
+			if (m.getsend().equals(send))
+				delMsg(m);
 		}
-		return messages.replaceItem(msg, msg.get_rid(), new PartitionKey(msg.getIdMessage()), new CosmosItemRequestOptions());
-		}
+		messages.queryItems("DELETE FROM Messages WHERE Messages.send=" + send, new CosmosQueryRequestOptions(),
+				MessageDAO.class);
+	}*/
 
 	public void close() {
 		client.close();

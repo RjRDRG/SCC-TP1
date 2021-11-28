@@ -3,7 +3,6 @@ package scc.data.media;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.NotFoundException;
 
 import com.azure.core.util.BinaryData;
@@ -17,10 +16,10 @@ public class MediaBlobLayer {
 
 	private static MediaBlobLayer instance;
 
-	public static MediaBlobLayer getInstance(ServletContext context) {
+	public static MediaBlobLayer getInstance() {
 		if(instance == null) {
 			BlobContainerClient containerClient = new BlobContainerClientBuilder()
-					.connectionString(AzureProperties.getProperty(context, "BlobStoreConnection"))
+					.connectionString(AzureProperties.getProperty("BlobStoreConnection"))
 					.containerName("images")
 					.buildClient();
 			instance = new MediaBlobLayer(containerClient);
