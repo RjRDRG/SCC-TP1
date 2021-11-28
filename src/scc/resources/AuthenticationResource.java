@@ -25,6 +25,7 @@ public class AuthenticationResource {
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response auth(Login login) {
 		UserDAO userDAO = UsersDBLayer.getInstance(context).getUserById(login.getIdUser());
 		if (userDAO == null)
