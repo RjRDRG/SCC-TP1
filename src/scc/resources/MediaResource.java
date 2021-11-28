@@ -1,6 +1,7 @@
 package scc.resources;
 
 import scc.data.media.MediaBlobLayer;
+import scc.data.user.UsersDBLayer;
 import scc.utils.Hash;
 
 import java.util.ArrayList;
@@ -9,15 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.ServiceUnavailableException;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -29,9 +24,7 @@ public class MediaResource
 
 	public MediaResource() {}
 
-	/**
-	 * Post a new image.The id of the image is its hash.
-	 */
+
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -42,10 +35,7 @@ public class MediaResource
 		return id;
 	}
 
-	/**
-	 * Return the contents of an image. Throw an appropriate error message if
-	 * id does not exist.
-	 */
+
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -53,13 +43,9 @@ public class MediaResource
 		return MediaBlobLayer.getInstance().download(id);
 	}
 
-	/**
-	 * Lists the ids of images stored.
-	 */
-	@GET
-	@Path("/")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> list() {
-		return MediaBlobLayer.getInstance().list();
+	@DELETE
+	@Path("/{id}")
+	public void delete(@PathParam("id") String id) {
+		MediaBlobLayer.getInstance().delete(id);
 	}
 }

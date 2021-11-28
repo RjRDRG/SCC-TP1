@@ -15,14 +15,19 @@ public class MainApplication extends Application
 
 	public MainApplication() {
 		resources.add(ControlResource.class);
+
 		resources.add(MediaResource.class);
 		singletons.add(new MediaResource());
+
 		resources.add(MessageResource.class);
 		singletons.add(new MessageResource());
+
 		resources.add(ChannelResource.class);
 		singletons.add(new ChannelResource());
+
 		resources.add(UsersResource.class);
 		singletons.add(new UsersResource());
+
 		resources.add(AuthenticationResource.class);
 		singletons.add(new AuthenticationResource());
 	}

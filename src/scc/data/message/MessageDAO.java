@@ -11,7 +11,6 @@ public class MessageDAO {
 	private String idPhoto;
 	private String channel;
 	private String replied;
-	private boolean garbage;
 
 	public MessageDAO() {
 	}
@@ -30,7 +29,10 @@ public class MessageDAO {
 
 		this.replied = replied;
 		this.channel = channel;
-		this.garbage = false;
+	}
+
+	public Message toMessage() {
+		return new Message(idMessage, send, dest, text, idPhoto, channel, replied);
 	}
 
 	public String get_rid() {
@@ -105,11 +107,19 @@ public class MessageDAO {
 		this.replied = replied;
 	}
 
-	public boolean isGarbage() {
-		return garbage;
-	}
 
-	public void setGarbage(boolean garbage) {
-		this.garbage = garbage;
+	@Override
+	public String toString() {
+		return "MessageDAO{" +
+				"_rid='" + _rid + '\'' +
+				", _ts='" + _ts + '\'' +
+				", idMessage='" + idMessage + '\'' +
+				", send='" + send + '\'' +
+				", dest='" + dest + '\'' +
+				", text='" + text + '\'' +
+				", idPhoto='" + idPhoto + '\'' +
+				", channel='" + channel + '\'' +
+				", replied='" + replied + '\'' +
+				'}';
 	}
 }

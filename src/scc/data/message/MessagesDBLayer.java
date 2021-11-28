@@ -13,8 +13,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
+import scc.data.media.MediaBlobLayer;
 import scc.mgt.AzureProperties;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,10 +60,9 @@ public class MessagesDBLayer {
 		if(messages != null) return;
 		CosmosDatabase db = client.getDatabase(DB_NAME);
 		messages = db.getContainer("Messages");
-		
 	}
 
-	public boolean delMsgById(String id) {
+	public void delMsgById(String id) {
 		init();
 
 		MessageDAO msg = getMsgById(id);
@@ -70,7 +71,7 @@ public class MessagesDBLayer {
 
 		PartitionKey key = new PartitionKey(msg.getChannel());
 		if(messages.deleteItem(msg.getIdMessage(), key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
-			return false;
+			throw new BadRequestException();
 
 		List<String> msgs = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
 
@@ -87,10 +88,11 @@ public class MessagesDBLayer {
 			}
 		}
 
-		return true;
+		if(msg.getIdPhoto() != null)
+			MediaBlobLayer.getInstance().delete(msg.getIdPhoto());
 	}
 	
-	public boolean putMsg(MessageDAO msg) {
+	public void putMsg(MessageDAO msg) {
 		init();
 		try {
 			Long cnt = cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), new ObjectMapper().writeValueAsString(msg));
@@ -100,12 +102,14 @@ public class MessagesDBLayer {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
-		return messages.createItem(msg).getStatusCode() < 400;
+		if(messages.createItem(msg).getStatusCode() >= 400)
+			throw new BadRequestException();
 	}
 	
 	public MessageDAO getMsgById(String id) {
 		init();
-		return messages.queryItems("SELECT * FROM Messages WHERE Messages.idMessage=\"" + id + "\"", new CosmosQueryRequestOptions(), MessageDAO.class).stream().findFirst().orElse(null);
+		return messages.queryItems("SELECT * FROM Messages WHERE Messages.idMessage=\"" + id + "\"", new CosmosQueryRequestOptions(), MessageDAO.class).stream().findFirst()
+				.orElseThrow(NotFoundException::new);
 	}
 
 	public List<MessageDAO> getMessages(String channel, int off, int limit) {
@@ -142,7 +146,7 @@ public class MessagesDBLayer {
 		return messageDAOS;
 	}
 	
-	public boolean updateMessage(MessageDAO msg) {
+	public void updateMessage(MessageDAO msg) {
 		init();
 		List<String> lst = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
 		ObjectMapper mapper = new ObjectMapper();
@@ -164,7 +168,8 @@ public class MessagesDBLayer {
 				break;
 			}
 		}
-		return messages.replaceItem(msg, msg.getIdMessage(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() < 400;
+		if(messages.replaceItem(msg, msg.getIdMessage(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
+			throw new BadRequestException();
 	}
 
 	public void deleteChannelsMessages(String channel) {

@@ -10,19 +10,15 @@ import scc.data.authentication.Session;
 import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
 
-//Class with authentication endpoints
-
-@Path("/user")
+@Path("/auth")
 public class AuthenticationResource {
 
 	public AuthenticationResource() {
 	}
 
-	/*
-	 * Login
-	 */
+
 	@POST
-	@Path("/auth")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response auth(Login login) {
 		UserDAO userDAO = UsersDBLayer.getInstance().getUserById(login.getIdUser());

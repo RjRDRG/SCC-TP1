@@ -1,15 +1,12 @@
 package scc.resources;
 
-import scc.data.authentication.Session;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
 import scc.data.user.User;
 import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
@@ -24,9 +21,7 @@ public class UsersResource
 
 	public UsersResource() {}
 
-	/**
-	 * Create a new user.
-	 */
+
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -40,9 +35,7 @@ public class UsersResource
 		return userId;
 	}
 	
-	/**
-	 * Update a new user.
-	 */
+
 	@POST
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -51,15 +44,14 @@ public class UsersResource
 		UsersDBLayer.getInstance().updateUser(new UserDAO(user));
 	}
 
-	/**
-	 * Delete a user.
-	 */
+
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 		UsersDBLayer.getInstance().checkCookieUser(session,id);
 		UsersDBLayer.getInstance().discardUserById(id);
 	}
+
 
 	@GET
 	@Path("/{id}")
@@ -69,12 +61,9 @@ public class UsersResource
 		return UsersDBLayer.getInstance().getUserById(id).toUser();
 	}
 
-	/**
-	 * Subscribe to a channel
-	 */
+
 	@POST
 	@Path("/subscribe/{id}/{channel}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public void subscribe(@CookieParam("scc:session") Cookie session, @PathParam("id") String id, @PathParam("channel") String channel) {
 		UsersDBLayer.getInstance().checkCookieUser(session, id);
 
@@ -94,12 +83,9 @@ public class UsersResource
 		}
 	}
 
-	/**
-	 * Invite a user to a channel
-	 */
+
 	@POST
 	@Path("/invite/{id}/{channel}/{other}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public void invite(@CookieParam("scc:session") Cookie session, @PathParam("id") String id, @PathParam("channel") String channel, @PathParam("other") String other) {
 		UsersDBLayer.getInstance().checkCookieUser(session, id);
 

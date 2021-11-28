@@ -1,15 +1,11 @@
 package scc.data.media;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import javax.ws.rs.NotFoundException;
 
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
-import com.azure.storage.blob.models.BlobItem;
 import scc.mgt.AzureProperties;
 
 public class MediaBlobLayer {
@@ -47,8 +43,8 @@ public class MediaBlobLayer {
 		return result.downloadContent().toBytes();	
 	}
 
-	//TODO delete not needed?
-	public List<String> list() {
-		return containerClient.listBlobs().stream().map(BlobItem::getName).collect(Collectors.toList());
+	public void delete(String id) {
+		BlobClient result = containerClient.getBlobClient(id);
+		result.delete();
 	}
 }

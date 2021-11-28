@@ -16,7 +16,7 @@ import scc.data.authentication.Session;
 import scc.cache.Cache;
 import scc.mgt.AzureProperties;
 
-import javax.servlet.ServletContext;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Cookie;
 import java.util.List;
@@ -69,21 +69,23 @@ public class UsersDBLayer {
 		updateUser(userDAO);
 	}
 
-	public boolean delUserById(String id) {
+	public void delUserById(String id) {
 		init();
 		cache.getResource().del("user: " + id);
 		PartitionKey key = new PartitionKey(id);
-		return users.deleteItem(id, key, new CosmosItemRequestOptions()).getStatusCode() < 400;
+		if(users.deleteItem(id, key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
+			throw new BadRequestException();
 	}
 	
-	public boolean putUser(UserDAO user) {
+	public void putUser(UserDAO user) {
 		init();
 		try {
 			cache.getResource().set("user:" + user.getIdUser(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return users.createItem(user).getStatusCode() < 400;
+		if(users.createItem(user).getStatusCode() >= 400)
+			throw new BadRequestException();
 	}
 	
 	public UserDAO getUserById( String id) {
@@ -99,7 +101,7 @@ public class UsersDBLayer {
 		return users.queryItems("SELECT * FROM Users WHERE Users.idUser=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class).stream().findFirst().orElse(null);
 	}
 	
-	public UserDAO updateUser(UserDAO user) {
+	public void updateUser(UserDAO user) {
 		init();
 
 		try {
@@ -108,7 +110,8 @@ public class UsersDBLayer {
 			e.printStackTrace();
 		}
 
-		return users.replaceItem(user, user.getIdUser(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions()).getItem();
+		if(users.replaceItem(user, user.getIdUser(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
+			throw new BadRequestException();
 	}
 
 	
@@ -139,6 +142,19 @@ public class UsersDBLayer {
 			e.printStackTrace();
 			throw new NotAuthorizedException("No valid session initialized");
 		}
+	}
+
+	/**
+	 * Throws exception if not appropriate user for operation on Channel
+	 */
+	public Session checkCookieUser(Cookie session, String[] ids) throws NotAuthorizedException {
+		Session s = checkCookieUser(session);
+		if (s.getIdUser().equals("admin")) return s;
+
+		for (String id : ids) {
+			if (s.getIdUser().equals(id)) return s;
+		}
+		throw new NotAuthorizedException("Invalid user : " + s.getIdUser());
 	}
 
 	/**

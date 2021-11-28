@@ -3,16 +3,11 @@ package scc.resources;
 import scc.data.channel.Channel;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
-import scc.data.user.User;
-import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,9 +18,6 @@ public class ChannelResource {
 
 	public ChannelResource() {}
 
-	/**
-	 * Create a new channel.
-	 */
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -36,7 +28,7 @@ public class ChannelResource {
 		String channelId = UUID.randomUUID().toString();
 		channel.setIdChannel(channelId);
 
-		ChannelsDBLayer.getInstance().putChannel(new ChannelDAO(channel));
+		ChannelsDBLayer.getInstance().createChannel(new ChannelDAO(channel));
 
 		return channelId;
 	}
@@ -45,11 +37,7 @@ public class ChannelResource {
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Channel get(@PathParam("id") String id) {
-		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
-		if(channel == null)
-			throw new NotFoundException();
-
-		return channel.toChannel();
+		return ChannelsDBLayer.getInstance().getChannelById(id).toChannel();
 	}
 
 	/**
@@ -72,9 +60,7 @@ public class ChannelResource {
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
 		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
-
-		if (!ChannelsDBLayer.getInstance().delChannelById(id))
-			throw new BadRequestException();
+		ChannelsDBLayer.getInstance().discardChannelById(id);
 	}
 
 }
