@@ -61,7 +61,9 @@ public class ChannelsDBLayer {
 
 	public void delChannelById(String id) {
 		init();
-		cache.getResource().del(CHANNEL + id);
+		if(cache!=null) {
+			cache.getResource().del(CHANNEL + id);
+		}
 		if(channels.deleteItem(id, new PartitionKey(id), new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
@@ -75,10 +77,12 @@ public class ChannelsDBLayer {
 
 	public void createChannel(ChannelDAO channel) {
 		init();
-		try {
-			cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+		if(cache!=null) {
+			try {
+				cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
 		}
 		if(channels.createItem(channel).getStatusCode() >= 400)
 			throw new BadRequestException();
@@ -86,12 +90,14 @@ public class ChannelsDBLayer {
 
 	public ChannelDAO getChannelById(String id) {
 		init();
-		String res = cache.getResource().get(CHANNEL + id);
-		if (res != null) {
-			try {
-				return new ObjectMapper().readValue(res, ChannelDAO.class);
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
+		if(cache!=null) {
+			String res = cache.getResource().get(CHANNEL + id);
+			if (res != null) {
+				try {
+					return new ObjectMapper().readValue(res, ChannelDAO.class);
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return channels.queryItems("SELECT * FROM Channels WHERE Channels.id=\"" + id + "\"",
@@ -101,10 +107,12 @@ public class ChannelsDBLayer {
 
 	public void updateChannel(ChannelDAO channel) {
 		init();
-		try {
-			cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+		if(cache!=null) {
+			try {
+				cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
 		}
 		if(channels.replaceItem(channel, channel.getId(), new PartitionKey(channel.getId()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();

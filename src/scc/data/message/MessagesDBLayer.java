@@ -76,22 +76,24 @@ public class MessagesDBLayer {
 		if(messages.deleteItem(msg.getId(), key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 
-		List<String> msgs = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
+		if(cache!=null) {
+			List<String> msgs = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
 
-		if(!msgs.isEmpty()) {
-			cache.getResource().del(RECENT_MSGS + msg.getChannel());
+			if (!msgs.isEmpty()) {
+				cache.getResource().del(RECENT_MSGS + msg.getChannel());
 
-			ObjectMapper mapper = new ObjectMapper();
+				ObjectMapper mapper = new ObjectMapper();
 
-			for (String s : msgs) {
-				MessageDAO m = null;
-				try {
-					m = mapper.readValue(s, MessageDAO.class);
-				} catch (JsonProcessingException e) {
-					e.printStackTrace();
-				}
-				if (!m.getId().equals(id)) {
-					cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), s);
+				for (String s : msgs) {
+					MessageDAO m = null;
+					try {
+						m = mapper.readValue(s, MessageDAO.class);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
+					if (!m.getId().equals(id)) {
+						cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), s);
+					}
 				}
 			}
 		}
@@ -102,14 +104,18 @@ public class MessagesDBLayer {
 	
 	public void putMsg(MessageDAO msg) {
 		init();
-		try {
-			Long cnt = cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), new ObjectMapper().writeValueAsString(msg));
-			if (cnt > MAX_MSG_IN_CACHE)
-				cache.getResource().ltrim(RECENT_MSGS + msg.getChannel(), 0, (MAX_MSG_IN_CACHE - 1));
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+
+		if(cache!=null) {
+			try {
+				Long cnt = cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), new ObjectMapper().writeValueAsString(msg));
+				if (cnt > MAX_MSG_IN_CACHE)
+					cache.getResource().ltrim(RECENT_MSGS + msg.getChannel(), 0, (MAX_MSG_IN_CACHE - 1));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
 		}
+
 		if(messages.createItem(msg).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
@@ -127,18 +133,20 @@ public class MessagesDBLayer {
 
 		int cachedMessages = 0;
 
-		if(off < MAX_MSG_IN_CACHE) {
-			cachedMessages = Math.min(limit, MAX_MSG_IN_CACHE-off);
-			messageDAOS.addAll(cache.getResource().lrange(RECENT_MSGS + channel, off, Math.min(limit - 1, MAX_MSG_IN_CACHE - 1)).stream().map(
-					s -> {
-						try {
-							return m.readValue(s, MessageDAO.class);
-						} catch (JsonProcessingException e) {
-							e.printStackTrace();
-							throw new RuntimeException(e);
+		if(cache!=null) {
+			if (off < MAX_MSG_IN_CACHE) {
+				cachedMessages = Math.min(limit, MAX_MSG_IN_CACHE - off);
+				messageDAOS.addAll(cache.getResource().lrange(RECENT_MSGS + channel, off, Math.min(limit - 1, MAX_MSG_IN_CACHE - 1)).stream().map(
+						s -> {
+							try {
+								return m.readValue(s, MessageDAO.class);
+							} catch (JsonProcessingException e) {
+								e.printStackTrace();
+								throw new RuntimeException(e);
+							}
 						}
-					}
-			).collect(Collectors.toList()));
+				).collect(Collectors.toList()));
+			}
 		}
 
 		if(limit > cachedMessages) {
@@ -156,24 +164,26 @@ public class MessagesDBLayer {
 	
 	public void updateMessage(MessageDAO msg) {
 		init();
-		List<String> lst = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
-		ObjectMapper mapper = new ObjectMapper();
-		for (String s : lst) {
-			MessageDAO m = null;
-			try {
-				m = mapper.readValue(s, MessageDAO.class);
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
-			if (msg.equals(m)) {
-				delMsgById(m.getId());
+		if(cache!=null) {
+			List<String> lst = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
+			ObjectMapper mapper = new ObjectMapper();
+			for (String s : lst) {
+				MessageDAO m = null;
 				try {
-					cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), mapper.writeValueAsString(msg));
+					m = mapper.readValue(s, MessageDAO.class);
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
-				break;
+				if (msg.equals(m)) {
+					delMsgById(m.getId());
+					try {
+						cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), mapper.writeValueAsString(msg));
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
+					break;
+				}
 			}
 		}
 		if(messages.replaceItem(msg, msg.getId(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
@@ -182,7 +192,9 @@ public class MessagesDBLayer {
 
 	public void deleteChannelsMessages(String channel) {
 		init();
-		cache.getResource().del(RECENT_MSGS + channel);
+		if(cache!=null) {
+			cache.getResource().del(RECENT_MSGS + channel);
+		}
 		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=" + channel, new CosmosQueryRequestOptions(), MessageDAO.class);
 	}
 

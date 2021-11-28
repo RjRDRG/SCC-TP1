@@ -5,6 +5,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import scc.mgt.AzureProperties;
 
 import javax.servlet.ServletContext;
+import java.util.Optional;
 
 public class Cache {
 	
@@ -12,6 +13,9 @@ public class Cache {
 	
 	public synchronized static JedisPool getInstance(ServletContext context) {
 		if(instance == null) {
+			if(!Boolean.parseBoolean(Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_CACHE")).orElse("true")))
+				return null;
+			
 			final JedisPoolConfig poolConfig = new JedisPoolConfig();
 			poolConfig.setMaxTotal(128);
 			poolConfig.setMaxIdle(128);
