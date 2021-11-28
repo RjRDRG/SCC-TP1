@@ -35,7 +35,7 @@ public class MessageResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(Message message) {
 		String messageId = UUID.randomUUID().toString();
-		message.setIdMessage(messageId);
+		message.setId(messageId);
 
 		MessagesDBLayer.getInstance(context).putMsg(new MessageDAO(message));
 
@@ -47,7 +47,7 @@ public class MessageResource {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(@CookieParam("scc:session") Cookie session, Message message) {
-		MessageDAO messageDAO = MessagesDBLayer.getInstance(context).getMsgById(message.getIdMessage());
+		MessageDAO messageDAO = MessagesDBLayer.getInstance(context).getMsgById(message.getId());
 		UsersDBLayer.getInstance(context).checkCookieUser(session, messageDAO.getSend());
 		MessagesDBLayer.getInstance(context).updateMessage(new MessageDAO (message));
 	}

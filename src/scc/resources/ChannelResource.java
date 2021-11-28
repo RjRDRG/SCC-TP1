@@ -31,7 +31,7 @@ public class ChannelResource {
 		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
 
 		String channelId = UUID.randomUUID().toString();
-		channel.setIdChannel(channelId);
+		channel.setId(channelId);
 
 		ChannelsDBLayer.getInstance(context).createChannel(new ChannelDAO(channel));
 

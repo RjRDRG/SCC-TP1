@@ -6,7 +6,7 @@ public class ChannelDAO {
 
 	private String _rid;
 	private String _ts;
-	private String idChannel;
+	private String id;
 	private String name;
 	private String owner;
 	private boolean publicChannel;
@@ -17,12 +17,12 @@ public class ChannelDAO {
 	}
 
 	public ChannelDAO(Channel channel) {
-		this(channel.getIdChannel(), channel.getName(), channel.getOwner(), channel.isPublicChannel(), channel.getMembers());
+		this(channel.getId(), channel.getName(), channel.getOwner(), channel.isPublicChannel(), channel.getMembers());
 	}
 
-	public ChannelDAO(String idChannel, String name, String owner, boolean publicChannel, String[] members) {
+	public ChannelDAO(String id, String name, String owner, boolean publicChannel, String[] members) {
 		super();
-		this.idChannel = idChannel;
+		this.id = id;
 		this.name = name;
 		this.members = members;
 		this.publicChannel = publicChannel;
@@ -31,7 +31,7 @@ public class ChannelDAO {
 	}
 
 	public Channel toChannel() {
-		return new Channel(idChannel, name, owner, publicChannel, members);
+		return new Channel(id, name, owner, publicChannel, members);
 	}
 
 	public String get_rid() {
@@ -50,12 +50,12 @@ public class ChannelDAO {
 		this._ts = _ts;
 	}
 
-	public String getIdChannel() {
-		return idChannel;
+	public String getId() {
+		return id;
 	}
 
-	public void setIdChannel(String idChannel) {
-		this.idChannel = idChannel;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -103,7 +103,7 @@ public class ChannelDAO {
 		return "ChannelDAO{" +
 				"_rid='" + _rid + '\'' +
 				", _ts='" + _ts + '\'' +
-				", idChannel='" + idChannel + '\'' +
+				", id='" + id + '\'' +
 				", name='" + name + '\'' +
 				", owner='" + owner + '\'' +
 				", publicChannel=" + publicChannel +

@@ -83,7 +83,7 @@ public class UsersDBLayer {
 	public void putUser(UserDAO user) {
 		init();
 		try {
-			cache.getResource().set("user:" + user.getIdUser(), new ObjectMapper().writeValueAsString(user));
+			cache.getResource().set("user:" + user.getId(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -91,7 +91,7 @@ public class UsersDBLayer {
 			throw new BadRequestException();
 	}
 	
-	public UserDAO getUserById( String id) {
+	public UserDAO getUserById(String id) {
 		init();
 		String res = cache.getResource().get("user:" + id);
 		if (res != null) {
@@ -108,12 +108,12 @@ public class UsersDBLayer {
 		init();
 
 		try {
-			cache.getResource().set("user:" + user.getIdUser(), new ObjectMapper().writeValueAsString(user));
+			cache.getResource().set("user:" + user.getId(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 
-		if(users.replaceItem(user, user.getIdUser(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
+		if(users.replaceItem(user, user.getId(),new PartitionKey(user.getId()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 

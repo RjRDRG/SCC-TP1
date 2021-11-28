@@ -73,7 +73,7 @@ public class ChannelsDBLayer {
 	public void createChannel(ChannelDAO channel) {
 		init();
 		try {
-			cache.getResource().set("channel:" + channel.getIdChannel(), new ObjectMapper().writeValueAsString(channel));
+			cache.getResource().set("channel:" + channel.getId(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -91,11 +91,11 @@ public class ChannelsDBLayer {
 	public void updateChannel(ChannelDAO channel) {
 		init();
 		try {
-			cache.getResource().set("channel:" + channel.getIdChannel(), new ObjectMapper().writeValueAsString(channel));
+			cache.getResource().set("channel:" + channel.getId(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		if(channels.replaceItem(channel, channel.getIdChannel(), new PartitionKey(channel.getIdChannel()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
+		if(channels.replaceItem(channel, channel.getId(), new PartitionKey(channel.getId()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 

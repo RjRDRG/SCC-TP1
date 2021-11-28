@@ -3,7 +3,7 @@ package scc.data.channel;
 import java.util.Arrays;
 
 public class Channel {
-	private String idChannel;
+	private String id;
 	private String name;
 	private String owner;
 	private boolean publicChannel;
@@ -12,21 +12,21 @@ public class Channel {
 	public Channel() {
 	}
 
-	public Channel(String idChannel, String name, String owner, boolean publicChannel, String[] members) {
+	public Channel(String id, String name, String owner, boolean publicChannel, String[] members) {
 		super();
-		this.idChannel = idChannel;
+		this.id = id;
 		this.members = members;
 		this.name = name;
 		this.owner = owner;
 		this.publicChannel = publicChannel;
 	}
 
-	public String getIdChannel() {
-		return idChannel;
+	public String getId() {
+		return id;
 	}
 
-	public void setIdChannel(String idChannel) {
-		this.idChannel = idChannel;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String[] getMembers() {
@@ -64,7 +64,7 @@ public class Channel {
 	@Override
 	public String toString() {
 		return "Channel{" +
-				"idChannel='" + idChannel + '\'' +
+				"id='" + id + '\'' +
 				", name='" + name + '\'' +
 				", owner='" + owner + '\'' +
 				", publicChannel=" + publicChannel +

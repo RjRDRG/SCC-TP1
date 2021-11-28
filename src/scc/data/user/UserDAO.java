@@ -8,7 +8,7 @@ import java.util.Arrays;
 public class UserDAO {
 	private String _rid;
 	private String _ts;
-	private String idUser;
+	private String id;
 	private String name;
 	private String pwd;
 	private String photoId;
@@ -19,12 +19,12 @@ public class UserDAO {
 	}
 
 	public UserDAO(User u) {
-		this(u.getIdUser(), u.getName(), u.getPwd(), u.getPhotoId(), u.getChannelIds());
+		this(u.getId(), u.getName(), u.getPwd(), u.getPhotoId(), u.getChannelIds());
 	}
 	
-	public UserDAO(String idUser, String name, String pwd, String photoId, String[] channelIds) {
+	public UserDAO(String id, String name, String pwd, String photoId, String[] channelIds) {
 		super();
-		this.idUser = idUser;
+		this.id = id;
 		this.name = name;
 		this.pwd = pwd;
 		this.photoId = photoId;
@@ -33,7 +33,7 @@ public class UserDAO {
 	}
 
 	public User toUser() {
-		return new User(idUser,name,pwd,photoId,channelIds);
+		return new User(id,name,pwd,photoId,channelIds);
 	}
 
 	public String get_rid() {
@@ -52,12 +52,12 @@ public class UserDAO {
 		this._ts = _ts;
 	}
 
-	public String getIdUser() {
-		return idUser;
+	public String getId() {
+		return id;
 	}
 
-	public void setIdUser(String idUser) {
-		this.idUser = idUser;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -105,7 +105,7 @@ public class UserDAO {
 		return "UserDAO{" +
 				"_rid='" + _rid + '\'' +
 				", _ts='" + _ts + '\'' +
-				", idUser='" + idUser + '\'' +
+				", id='" + id + '\'' +
 				", name='" + name + '\'' +
 				", pwd='" + pwd + '\'' +
 				", photoId='" + photoId + '\'' +

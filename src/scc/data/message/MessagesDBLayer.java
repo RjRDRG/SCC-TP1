@@ -73,7 +73,7 @@ public class MessagesDBLayer {
 			throw new NotFoundException();
 
 		PartitionKey key = new PartitionKey(msg.getChannel());
-		if(messages.deleteItem(msg.getIdMessage(), key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
+		if(messages.deleteItem(msg.getId(), key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 
 		List<String> msgs = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
@@ -85,7 +85,7 @@ public class MessagesDBLayer {
 
 			for (String s : msgs) {
 				MessageDAO m = mapper.convertValue(s, MessageDAO.class);
-				if (!m.getIdMessage().equals(id)) {
+				if (!m.getId().equals(id)) {
 					cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), s);
 				}
 			}
@@ -162,7 +162,7 @@ public class MessagesDBLayer {
 				throw new RuntimeException(e);
 			}
 			if (msg.equals(m)) {
-				delMsgById(m.getIdMessage());
+				delMsgById(m.getId());
 				try {
 					cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), mapper.writeValueAsString(msg));
 				} catch (JsonProcessingException e) {
@@ -171,7 +171,7 @@ public class MessagesDBLayer {
 				break;
 			}
 		}
-		if(messages.replaceItem(msg, msg.getIdMessage(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
+		if(messages.replaceItem(msg, msg.getId(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 

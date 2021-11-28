@@ -32,7 +32,7 @@ public class UsersResource
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(User user) {
 		String userId = UUID.randomUUID().toString();
-		user.setIdUser(userId);
+		user.setId(userId);
 
 		UsersDBLayer.getInstance(context).putUser(new UserDAO(user));
 
@@ -44,7 +44,7 @@ public class UsersResource
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(@CookieParam("scc:session") Cookie session, User user) {
-		UsersDBLayer.getInstance(context).checkCookieUser(session,user.getIdUser());
+		UsersDBLayer.getInstance(context).checkCookieUser(session,user.getId());
 		UsersDBLayer.getInstance(context).updateUser(new UserDAO(user));
 	}
 
@@ -88,7 +88,7 @@ public class UsersResource
 			UsersDBLayer.getInstance(context).updateUser(userDAO);
 
 			Set<String> members = Arrays.stream(channelDAO.getMembers()).collect(Collectors.toSet());
-			members.add(userDAO.getIdUser());
+			members.add(userDAO.getId());
 			channelDAO.setMembers(members.toArray(new String[0]));
 			ChannelsDBLayer.getInstance(context).updateChannel(channelDAO);
 		}
