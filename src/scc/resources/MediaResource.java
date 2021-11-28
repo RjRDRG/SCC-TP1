@@ -21,6 +21,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/media")
 public class MediaResource
 {
+	@Context ServletContext context;
 
 	public MediaResource() {}
 
@@ -31,7 +32,7 @@ public class MediaResource
 	@Produces(MediaType.APPLICATION_JSON)
 	public String upload(byte[] contents) {
 		String id = Hash.of(contents);
-		MediaBlobLayer.getInstance().upload(id, contents);
+		MediaBlobLayer.getInstance(context).upload(id, contents);
 		return id;
 	}
 
@@ -40,12 +41,12 @@ public class MediaResource
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public byte[] download(@PathParam("id") String id) {
-		return MediaBlobLayer.getInstance().download(id);
+		return MediaBlobLayer.getInstance(context).download(id);
 	}
 
 	@DELETE
 	@Path("/{id}")
 	public void delete(@PathParam("id") String id) {
-		MediaBlobLayer.getInstance().delete(id);
+		MediaBlobLayer.getInstance(context).delete(id);
 	}
 }

@@ -5,7 +5,9 @@ import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
 import scc.data.user.UsersDBLayer;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
@@ -16,6 +18,9 @@ import java.util.UUID;
 @Path("/channel")
 public class ChannelResource {
 
+	@Context
+	ServletContext context;
+
 	public ChannelResource() {}
 
 	@POST
@@ -23,12 +28,12 @@ public class ChannelResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(@CookieParam("scc:session") Cookie session, Channel channel) {
-		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
+		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
 
 		String channelId = UUID.randomUUID().toString();
 		channel.setIdChannel(channelId);
 
-		ChannelsDBLayer.getInstance().createChannel(new ChannelDAO(channel));
+		ChannelsDBLayer.getInstance(context).createChannel(new ChannelDAO(channel));
 
 		return channelId;
 	}
@@ -37,7 +42,7 @@ public class ChannelResource {
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Channel get(@PathParam("id") String id) {
-		return ChannelsDBLayer.getInstance().getChannelById(id).toChannel();
+		return ChannelsDBLayer.getInstance(context).getChannelById(id).toChannel();
 	}
 
 
@@ -45,26 +50,26 @@ public class ChannelResource {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(@CookieParam("scc:session") Cookie session, Channel channel) {
-		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
+		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
 
-		ChannelsDBLayer.getInstance().updateChannel(new ChannelDAO(channel));
+		ChannelsDBLayer.getInstance(context).updateChannel(new ChannelDAO(channel));
 	}
 
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
-		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
-		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
-		ChannelsDBLayer.getInstance().discardChannelById(id);
+		ChannelDAO channel = ChannelsDBLayer.getInstance(context).getChannelById(id);
+		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
+		ChannelsDBLayer.getInstance(context).discardChannelById(id);
 	}
 
 
 	@DELETE
 	@Path("/force/{id}")
 	public void forceDelete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
-		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
-		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
-		ChannelsDBLayer.getInstance().delChannelById(id);
+		ChannelDAO channel = ChannelsDBLayer.getInstance(context).getChannelById(id);
+		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
+		ChannelsDBLayer.getInstance(context).delChannelById(id);
 	}
 
 }

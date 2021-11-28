@@ -23,6 +23,9 @@ import javax.ws.rs.core.MediaType;
 
 public class MessageResource {
 
+	@Context
+	ServletContext context;
+
 	public MessageResource() {}
 
 
@@ -34,7 +37,7 @@ public class MessageResource {
 		String messageId = UUID.randomUUID().toString();
 		message.setIdMessage(messageId);
 
-		MessagesDBLayer.getInstance().putMsg(new MessageDAO(message));
+		MessagesDBLayer.getInstance(context).putMsg(new MessageDAO(message));
 
 		return messageId;
 	}
@@ -44,9 +47,9 @@ public class MessageResource {
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(@CookieParam("scc:session") Cookie session, Message message) {
-		MessageDAO messageDAO = MessagesDBLayer.getInstance().getMsgById(message.getIdMessage());
-		UsersDBLayer.getInstance().checkCookieUser(session, messageDAO.getSend());
-		MessagesDBLayer.getInstance().updateMessage(new MessageDAO (message));
+		MessageDAO messageDAO = MessagesDBLayer.getInstance(context).getMsgById(message.getIdMessage());
+		UsersDBLayer.getInstance(context).checkCookieUser(session, messageDAO.getSend());
+		MessagesDBLayer.getInstance(context).updateMessage(new MessageDAO (message));
 	}
 
 
@@ -54,18 +57,18 @@ public class MessageResource {
 	@Path("/{channel}/{off}/{limit}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Message> get(@CookieParam("scc:session") Cookie session, @PathParam("channel") String channel, @PathParam("off") String off, @PathParam("limit") String limit) {
-		ChannelDAO channelDAO = ChannelsDBLayer.getInstance().getChannelById(channel);
-		UsersDBLayer.getInstance().checkCookieUser(session,channelDAO.getMembers());
-		return MessagesDBLayer.getInstance().getMessages(channel,Integer.parseInt(off), Integer.parseInt(limit)).stream().map(MessageDAO::toMessage).collect(Collectors.toList());
+		ChannelDAO channelDAO = ChannelsDBLayer.getInstance(context).getChannelById(channel);
+		UsersDBLayer.getInstance(context).checkCookieUser(session,channelDAO.getMembers());
+		return MessagesDBLayer.getInstance(context).getMessages(channel,Integer.parseInt(off), Integer.parseInt(limit)).stream().map(MessageDAO::toMessage).collect(Collectors.toList());
 	}
 
 
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
-		MessageDAO messageDAO = MessagesDBLayer.getInstance().getMsgById(id);
-		UsersDBLayer.getInstance().checkCookieUser(session, messageDAO.getSend());
-		MessagesDBLayer.getInstance().delMsgById(id);
+		MessageDAO messageDAO = MessagesDBLayer.getInstance(context).getMsgById(id);
+		UsersDBLayer.getInstance(context).checkCookieUser(session, messageDAO.getSend());
+		MessagesDBLayer.getInstance(context).delMsgById(id);
 	}
 
 }

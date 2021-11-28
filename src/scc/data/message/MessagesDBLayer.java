@@ -16,6 +16,7 @@ import scc.cache.Cache;
 import scc.data.media.MediaBlobLayer;
 import scc.mgt.AzureProperties;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
@@ -29,29 +30,31 @@ public class MessagesDBLayer {
 
 	private static MessagesDBLayer instance;
 
-	public static synchronized MessagesDBLayer getInstance() {
+	public static synchronized MessagesDBLayer getInstance(ServletContext context) {
 		if( instance == null) {
 			CosmosClient client = new CosmosClientBuilder()
-					.endpoint(AzureProperties.getProperty("COSMOSDB_URL"))
-					.key(AzureProperties.getProperty("COSMOSDB_KEY"))
+					.endpoint(AzureProperties.getProperty(context, "COSMOSDB_URL"))
+					.key(AzureProperties.getProperty(context, "COSMOSDB_KEY"))
 					.gatewayMode()		// replace by .directMode() for better performance
 					.consistencyLevel(ConsistencyLevel.SESSION)
 					.connectionSharingAcrossClientsEnabled(true)
 					.contentResponseOnWriteEnabled(true)
 					.buildClient();
-			JedisPool cache = Cache.getInstance();
-			instance = new MessagesDBLayer(client, cache);
+			JedisPool cache = Cache.getInstance(context);
+			instance = new MessagesDBLayer(context, client, cache);
 		}
 
 		return instance;
 	}
-	
+
+	private final ServletContext context;
 	private final CosmosClient client;
 	private final JedisPool cache;
 
 	private CosmosContainer messages;
 
-	public MessagesDBLayer(CosmosClient client, JedisPool cache) {
+	public MessagesDBLayer(ServletContext context, CosmosClient client, JedisPool cache) {
+		this.context = context;
 		this.client = client;
 		this.cache = cache;
 	}
@@ -89,7 +92,7 @@ public class MessagesDBLayer {
 		}
 
 		if(msg.getIdPhoto() != null)
-			MediaBlobLayer.getInstance().delete(msg.getIdPhoto());
+			MediaBlobLayer.getInstance(context).delete(msg.getIdPhoto());
 	}
 	
 	public void putMsg(MessageDAO msg) {

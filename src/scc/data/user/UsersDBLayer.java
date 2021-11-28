@@ -15,7 +15,7 @@ import redis.clients.jedis.JedisPool;
 import scc.data.authentication.Session;
 import scc.cache.Cache;
 import scc.mgt.AzureProperties;
-
+import javax.servlet.ServletContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Cookie;
@@ -28,31 +28,33 @@ public class UsersDBLayer {
 	
 	private static UsersDBLayer instance;
 
-	public static synchronized UsersDBLayer getInstance() {
+	public static synchronized UsersDBLayer getInstance(ServletContext context) {
 		if(instance == null) {
 			try {
 				CosmosClient client = new CosmosClientBuilder()
-						.endpoint(AzureProperties.getProperty("COSMOSDB_URL"))
-						.key(AzureProperties.getProperty("COSMOSDB_KEY"))
+						.endpoint(AzureProperties.getProperty(context, "COSMOSDB_URL"))
+						.key(AzureProperties.getProperty(context, "COSMOSDB_KEY"))
 						.gatewayMode()		// replace by .directMode() for better performance
 						.consistencyLevel(ConsistencyLevel.SESSION)
 						.connectionSharingAcrossClientsEnabled(true)
 						.contentResponseOnWriteEnabled(true)
 						.buildClient();
-				JedisPool cache = Cache.getInstance();
-				instance = new UsersDBLayer(client,cache);
+				JedisPool cache = Cache.getInstance(context);
+				instance = new UsersDBLayer(context, client, cache);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		return instance;
 	}
-	
+
+	private final ServletContext context;
 	private final CosmosClient client;
 	private final JedisPool cache;
 	private CosmosContainer users;
 	
-	public UsersDBLayer(CosmosClient client, JedisPool cache) {
+	public UsersDBLayer(ServletContext context, CosmosClient client, JedisPool cache) {
+		this.context = context;
 		this.client = client;
 		this.cache = cache;
 	}
@@ -150,7 +152,7 @@ public class UsersDBLayer {
 	 */
 	public void checkCookieUser(Cookie session, String[] ids) throws NotAuthorizedException {
 		boolean enable = Boolean.parseBoolean(
-				Optional.ofNullable(AzureProperties.getProperty("ENABLE_AUTH")).orElse("false")
+				Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_AUTH")).orElse("false")
 		);
 		if(!enable) return;
 
@@ -168,7 +170,7 @@ public class UsersDBLayer {
 	 */
 	public void checkCookieUser(Cookie session, String id) throws NotAuthorizedException {
 		boolean enable = Boolean.parseBoolean(
-				Optional.ofNullable(AzureProperties.getProperty("ENABLE_AUTH")).orElse("false")
+				Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_AUTH")).orElse("false")
 		);
 		if(!enable) return;
 
