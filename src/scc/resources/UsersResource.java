@@ -52,6 +52,13 @@ public class UsersResource
 		UsersDBLayer.getInstance().discardUserById(id);
 	}
 
+	@DELETE
+	@Path("/force/{id}")
+	public void forceDelete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		UsersDBLayer.getInstance().checkCookieUser(session,id);
+		UsersDBLayer.getInstance().delUserById(id);
+	}
+
 
 	@GET
 	@Path("/{id}")

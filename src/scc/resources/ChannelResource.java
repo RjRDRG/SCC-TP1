@@ -40,9 +40,7 @@ public class ChannelResource {
 		return ChannelsDBLayer.getInstance().getChannelById(id).toChannel();
 	}
 
-	/**
-	 * Update a new channel.
-	 */
+
 	@POST
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -52,15 +50,21 @@ public class ChannelResource {
 		ChannelsDBLayer.getInstance().updateChannel(new ChannelDAO(channel));
 	}
 
-	/**
-	 * Delete a channel.
-	 */
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
 		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
 		ChannelsDBLayer.getInstance().discardChannelById(id);
+	}
+
+
+	@DELETE
+	@Path("/force/{id}")
+	public void forceDelete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		ChannelDAO channel = ChannelsDBLayer.getInstance().getChannelById(id);
+		UsersDBLayer.getInstance().checkCookieUser(session, channel.getOwner());
+		ChannelsDBLayer.getInstance().delChannelById(id);
 	}
 
 }
