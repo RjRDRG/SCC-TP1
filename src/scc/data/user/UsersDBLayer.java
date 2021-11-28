@@ -18,6 +18,7 @@ import scc.mgt.AzureProperties;
 import javax.servlet.ServletContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Cookie;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,8 @@ import java.util.stream.Collectors;
 
 public class UsersDBLayer {
 	private static final String DB_NAME = "scc2122db";
-	
+	public static final String USER = "user:";
+
 	private static UsersDBLayer instance;
 
 	public static synchronized UsersDBLayer getInstance(ServletContext context) {
@@ -74,16 +76,16 @@ public class UsersDBLayer {
 
 	public void delUserById(String id) {
 		init();
-		cache.getResource().del("user: " + id);
+		cache.getResource().del(USER + id);
 		PartitionKey key = new PartitionKey(id);
 		if(users.deleteItem(id, key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
 	
-	public void putUser(UserDAO user) {
+	public void createUser(UserDAO user) {
 		init();
 		try {
-			cache.getResource().set("user:" + user.getId(), new ObjectMapper().writeValueAsString(user));
+			cache.getResource().set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -93,7 +95,7 @@ public class UsersDBLayer {
 	
 	public UserDAO getUserById(String id) {
 		init();
-		String res = cache.getResource().get("user:" + id);
+		String res = cache.getResource().get(USER + id);
 		if (res != null) {
 			try {
 				return new ObjectMapper().readValue(res, UserDAO.class);
@@ -101,14 +103,15 @@ public class UsersDBLayer {
 				e.printStackTrace();
 			}
 		}
-		return users.queryItems("SELECT * FROM Users WHERE Users.idUser=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class).stream().findFirst().orElse(null);
+		return users.queryItems("SELECT * FROM Users WHERE Users.id=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class)
+				.stream().findFirst().orElseThrow(NotFoundException::new);
 	}
 	
 	public void updateUser(UserDAO user) {
 		init();
 
 		try {
-			cache.getResource().set("user:" + user.getId(), new ObjectMapper().writeValueAsString(user));
+			cache.getResource().set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

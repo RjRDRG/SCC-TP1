@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Resource for managing messages.
  */
-
+@Path("/message")
 public class MessageResource {
 
 	@Context
@@ -34,7 +34,7 @@ public class MessageResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(Message message) {
-		String messageId = UUID.randomUUID().toString();
+		String messageId = UUID.randomUUID().toString().replace("-", "");;
 		message.setId(messageId);
 
 		MessagesDBLayer.getInstance(context).putMsg(new MessageDAO(message));

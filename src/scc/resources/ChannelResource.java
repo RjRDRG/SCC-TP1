@@ -30,7 +30,7 @@ public class ChannelResource {
 	public String create(@CookieParam("scc:session") Cookie session, Channel channel) {
 		UsersDBLayer.getInstance(context).checkCookieUser(session, channel.getOwner());
 
-		String channelId = UUID.randomUUID().toString();
+		String channelId = UUID.randomUUID().toString().replace("-", "");;
 		channel.setId(channelId);
 
 		ChannelsDBLayer.getInstance(context).createChannel(new ChannelDAO(channel));

@@ -84,14 +84,19 @@ public class MessagesDBLayer {
 			ObjectMapper mapper = new ObjectMapper();
 
 			for (String s : msgs) {
-				MessageDAO m = mapper.convertValue(s, MessageDAO.class);
+				MessageDAO m = null;
+				try {
+					m = mapper.readValue(s, MessageDAO.class);
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+				}
 				if (!m.getId().equals(id)) {
 					cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), s);
 				}
 			}
 		}
 
-		if(msg.getIdPhoto() != null)
+		if(msg.getIdPhoto() != null && msg.getIdPhoto().equals(""))
 			MediaBlobLayer.getInstance(context).delete(msg.getIdPhoto());
 	}
 	
@@ -111,7 +116,7 @@ public class MessagesDBLayer {
 	
 	public MessageDAO getMsgById(String id) {
 		init();
-		return messages.queryItems("SELECT * FROM Messages WHERE Messages.idMessage=\"" + id + "\"", new CosmosQueryRequestOptions(), MessageDAO.class).stream().findFirst()
+		return messages.queryItems("SELECT * FROM Messages WHERE Messages.id=\"" + id + "\"", new CosmosQueryRequestOptions(), MessageDAO.class).stream().findFirst()
 				.orElseThrow(NotFoundException::new);
 	}
 

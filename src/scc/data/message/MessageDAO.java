@@ -12,8 +12,7 @@ public class MessageDAO {
 	private String channel;
 	private String replied;
 
-	public MessageDAO() {
-	}
+	public MessageDAO() {}
 
 	public MessageDAO(Message msg) {
 		this(msg.getId(), msg.getSend(), msg.getDest(), msg.getText(), msg.getIdPhoto(), msg.getChannel(), msg.getReplied());

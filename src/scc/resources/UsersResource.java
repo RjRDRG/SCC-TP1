@@ -31,10 +31,10 @@ public class UsersResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(User user) {
-		String userId = UUID.randomUUID().toString();
+		String userId = UUID.randomUUID().toString().replace("-", "");
 		user.setId(userId);
 
-		UsersDBLayer.getInstance(context).putUser(new UserDAO(user));
+		UsersDBLayer.getInstance(context).createUser(new UserDAO(user));
 
 		return userId;
 	}
@@ -110,7 +110,7 @@ public class UsersResource
 			UsersDBLayer.getInstance(context).updateUser(userDAO);
 
 			Set<String> members = Arrays.stream(channelDAO.getMembers()).collect(Collectors.toSet());
-			members.add(id);
+			members.add(other);
 			channelDAO.setMembers(members.toArray(new String[0]));
 			ChannelsDBLayer.getInstance(context).updateChannel(channelDAO);
 		}

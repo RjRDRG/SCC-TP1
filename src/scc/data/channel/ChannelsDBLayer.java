@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
+import scc.data.user.UserDAO;
 import scc.mgt.AzureProperties;
 
 import javax.servlet.ServletContext;
@@ -21,6 +22,7 @@ import javax.ws.rs.NotFoundException;
 
 public class ChannelsDBLayer {
 	private static final String DB_NAME = "scc2122db";
+	public static final String CHANNEL = "channel:";
 
 	private static ChannelsDBLayer instance;
 
@@ -59,6 +61,7 @@ public class ChannelsDBLayer {
 
 	public void delChannelById(String id) {
 		init();
+		cache.getResource().del(CHANNEL + id);
 		if(channels.deleteItem(id, new PartitionKey(id), new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
@@ -73,7 +76,7 @@ public class ChannelsDBLayer {
 	public void createChannel(ChannelDAO channel) {
 		init();
 		try {
-			cache.getResource().set("channel:" + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -83,7 +86,15 @@ public class ChannelsDBLayer {
 
 	public ChannelDAO getChannelById(String id) {
 		init();
-		return channels.queryItems("SELECT * FROM Channels WHERE Channels.idChannel=\"" + id + "\"",
+		String res = cache.getResource().get(CHANNEL + id);
+		if (res != null) {
+			try {
+				return new ObjectMapper().readValue(res, ChannelDAO.class);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+		}
+		return channels.queryItems("SELECT * FROM Channels WHERE Channels.id=\"" + id + "\"",
 				new CosmosQueryRequestOptions(), ChannelDAO.class).stream().findFirst()
 				.orElseThrow(NotFoundException::new);
 	}
@@ -91,7 +102,7 @@ public class ChannelsDBLayer {
 	public void updateChannel(ChannelDAO channel) {
 		init();
 		try {
-			cache.getResource().set("channel:" + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
