@@ -20,6 +20,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Cookie;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class UsersDBLayer {
@@ -147,12 +148,17 @@ public class UsersDBLayer {
 	/**
 	 * Throws exception if not appropriate user for operation on Channel
 	 */
-	public Session checkCookieUser(Cookie session, String[] ids) throws NotAuthorizedException {
+	public void checkCookieUser(Cookie session, String[] ids) throws NotAuthorizedException {
+		boolean enable = Boolean.parseBoolean(
+				Optional.ofNullable(AzureProperties.getProperty("ENABLE_AUTH")).orElse("false")
+		);
+		if(!enable) return;
+
 		Session s = checkCookieUser(session);
-		if (s.getIdUser().equals("admin")) return s;
+		if (s.getIdUser().equals("admin")) return;
 
 		for (String id : ids) {
-			if (s.getIdUser().equals(id)) return s;
+			if (s.getIdUser().equals(id)) return;
 		}
 		throw new NotAuthorizedException("Invalid user : " + s.getIdUser());
 	}
@@ -160,11 +166,15 @@ public class UsersDBLayer {
 	/**
 	 * Throws exception if not appropriate user for operation on Channel
 	 */
-	public Session checkCookieUser(Cookie session, String id) throws NotAuthorizedException {
+	public void checkCookieUser(Cookie session, String id) throws NotAuthorizedException {
+		boolean enable = Boolean.parseBoolean(
+				Optional.ofNullable(AzureProperties.getProperty("ENABLE_AUTH")).orElse("false")
+		);
+		if(!enable) return;
+
 		Session s = checkCookieUser(session);
 		if (!s.getIdUser().equals(id) && !s.getIdUser().equals("admin"))
 			throw new NotAuthorizedException("Invalid user : " + s.getIdUser());
-		return s;
 	}
 
 	/**
