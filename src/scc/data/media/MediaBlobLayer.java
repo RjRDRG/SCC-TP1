@@ -47,8 +47,8 @@ public class MediaBlobLayer {
 
 		return result.downloadContent().toBytes();	
 	}
-	
 
+	//TODO delete not needed?
 	public List<String> list() {
 		return containerClient.listBlobs().stream().map(BlobItem::getName).collect(Collectors.toList());
 	}

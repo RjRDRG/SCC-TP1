@@ -6,18 +6,21 @@ import com.azure.cosmos.CosmosClientBuilder;
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.CosmosDatabase;
 import com.azure.cosmos.models.CosmosItemRequestOptions;
-import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
-import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import redis.clients.jedis.JedisPool;
+import scc.data.authentication.Session;
 import scc.cache.Cache;
 import scc.mgt.AzureProperties;
 
 import javax.servlet.ServletContext;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.core.Cookie;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class UsersDBLayer {
 	private static final String DB_NAME = "scc2122db";
@@ -45,7 +48,6 @@ public class UsersDBLayer {
 	}
 	
 	private final CosmosClient client;
-	private CosmosDatabase db;
 	private CosmosContainer users;
 	private final JedisPool cache;
 	
@@ -55,39 +57,48 @@ public class UsersDBLayer {
 	}
 	
 	private synchronized void init() {
-		if(db != null) return;
-		db = client.getDatabase(DB_NAME);
+		if(users != null) return;
+		CosmosDatabase db = client.getDatabase(DB_NAME);
 		users = db.getContainer("Users");
 	}
 
-	public CosmosItemResponse<Object> delUserById(String id) {
+	public boolean delUserById(String id) {
 		init();
-		PartitionKey key = new PartitionKey( id);
-		return users.deleteItem(id, key, new CosmosItemRequestOptions());
+		cache.getResource().del("user: " + id);
+		PartitionKey key = new PartitionKey(id);
+		return users.deleteItem(id, key, new CosmosItemRequestOptions()).getStatusCode() < 400;
 	}
 	
-	public CosmosItemResponse<Object> delUser(UserDAO user) {
+	public boolean delUser(UserDAO user) {
 		init();
 		cache.getResource().del("user: " + user.getIdUser());
-		return users.deleteItem(user, new CosmosItemRequestOptions());
+		return users.deleteItem(user, new CosmosItemRequestOptions()).getStatusCode() < 400;
 	}
 	
-	public CosmosItemResponse<UserDAO> putUser(UserDAO user) {
+	public boolean putUser(UserDAO user) {
 		init();
 		try {
 			cache.getResource().set("user:" + user.getIdUser(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return users.createItem(user);
+		return users.createItem(user).getStatusCode() < 400;
 	}
 	
-	public CosmosPagedIterable<UserDAO> getUserById( String id) {
+	public UserDAO getUserById( String id) {
 		init();
-		return users.queryItems("SELECT * FROM Users WHERE Users.id=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class);
+		String res = cache.getResource().get("user:" + id);
+		if (res != null) {
+			try {
+				return new ObjectMapper().readValue(res, UserDAO.class);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+		}
+		return users.queryItems("SELECT * FROM Users WHERE Users.id=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class).stream().findFirst().orElse(null);
 	}
 	
-	public CosmosItemResponse<UserDAO> updateUser(UserDAO user) {
+	public UserDAO updateUser(UserDAO user) {
 		init();
 
 		try {
@@ -96,19 +107,56 @@ public class UsersDBLayer {
 			e.printStackTrace();
 		}
 
-		return users.replaceItem(user, user.get_rid(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions());
+		return users.replaceItem(user, user.get_rid(),new PartitionKey(user.getIdUser()), new CosmosItemRequestOptions()).getItem();
 	}
 
 	
-	public CosmosPagedIterable<UserDAO> getUsers(int off, int limit) {
+	public List<UserDAO> getUsers(int off, int limit) {
 		init();
-		return users.queryItems("SELECT * FROM Users OFFSET "+off+" LIMIT "+limit, new CosmosQueryRequestOptions(), UserDAO.class);
+		return users.queryItems("SELECT * FROM Users OFFSET "+off+" LIMIT "+limit, new CosmosQueryRequestOptions(), UserDAO.class).stream().collect(Collectors.toList());
 	}
 
-	
+    public List<UserDAO> getDeletedUsers() {
+		init();
+		return users.queryItems("SELECT * FROM Users WHERE garbage = 1", new CosmosQueryRequestOptions(), UserDAO.class).stream().collect(Collectors.toList());
+	}
+
+	public void putSession(Session s) {
+		init();
+
+		try {
+			cache.getResource().set(s.getSessionId(), new ObjectMapper().writeValueAsString(s));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Session getSession(String sessionID) {
+		try {
+			return new ObjectMapper().readValue(cache.getResource().get(sessionID), Session.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new NotAuthorizedException("No valid session initialized");
+		}
+	}
+
+	/**
+	 * Throws exception if not appropriate user for operation on Channel
+	 */
+	public Session checkCookieUser(Cookie session, String id) throws NotAuthorizedException {
+		//TODO AzureProperties.getProperty("ENABLE_ACCESS_CONTROL")
+
+		if (session == null || session.getValue() == null)
+			throw new NotAuthorizedException("No session initialized");
+		Session s = getSession(session.getValue());
+		if (s == null || s.getIdUser() == null || s.getIdUser().length() == 0)
+			throw new NotAuthorizedException("No valid session initialized");
+		if (!s.getIdUser().equals(id) && !s.getIdUser().equals("admin"))
+			throw new NotAuthorizedException("Invalid user : " + s.getIdUser());
+		return s;
+	}
+
 	public void close() {
 		client.close();
 	}
-	
-	
 }

@@ -9,6 +9,9 @@ public class Message {
 	private String channel;
 	private String replied;
 
+	public Message() {
+	}
+
 	public Message(String idMessage, String dest, String send, String text, String idPhoto, String channel, String replied) {
 		super();
 		this.idMessage = idMessage;

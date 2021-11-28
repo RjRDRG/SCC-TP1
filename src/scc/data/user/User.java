@@ -12,6 +12,9 @@ public class User {
 	private String photoId;
 	private String[] channelIds;
 
+	public User() {
+	}
+
 	public User(String idUser, String name, String pwd, String photoId, String[] channelIds) {
 		super();
 		this.idUser = idUser;
@@ -54,21 +57,21 @@ public class User {
 	}
 
 	public String[] getChannelIds() {
-		return channelIds == null ? new String[0] : channelIds;
+		return channelIds;
 	}
 
 	public void setChannelIds(String[] channelIds) {
 		this.channelIds = channelIds;
 	}
 
-	public void addChannelId(String id) {
-		channelIds[channelIds.length-1] = id;
-	}
-
 	@Override
 	public String toString() {
-		return "User [idUser=" + idUser + ", name=" + name + ", pwd=" + pwd + ", photoId=" + photoId + ", channelIds="
-				+ Arrays.toString(channelIds) + "]";
+		return "User{" +
+				"idUser='" + idUser + '\'' +
+				", name='" + name + '\'' +
+				", pwd='" + pwd + '\'' +
+				", photoId='" + photoId + '\'' +
+				", channelIds=" + Arrays.toString(channelIds) +
+				'}';
 	}
-
 }

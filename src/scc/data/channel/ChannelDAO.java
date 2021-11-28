@@ -11,12 +11,13 @@ public class ChannelDAO {
 	private String owner;
 	private boolean publicChannel;
 	private String[] members;
+	private boolean garbage;
 
 	public ChannelDAO() {
 	}
 
 	public ChannelDAO(Channel channel) {
-		this(channel.getIdChannel(), channel.getName(), channel.getOwner(), channel.getVisibility(), channel.getMembers());
+		this(channel.getIdChannel(), channel.getName(), channel.getOwner(), channel.isPublicChannel(), channel.getMembers());
 	}
 
 	public ChannelDAO(String idChannel, String name, String owner, boolean publicChannel, String[] members) {
@@ -26,6 +27,11 @@ public class ChannelDAO {
 		this.members = members;
 		this.publicChannel = publicChannel;
 		this.owner = owner;
+		this.garbage = false;
+	}
+
+	public Channel toChannel() {
+		return new Channel(idChannel, name, owner, publicChannel, members);
 	}
 
 	public String get_rid() {
@@ -52,11 +58,11 @@ public class ChannelDAO {
 		this.idChannel = idChannel;
 	}
 
-	public String getname() {
+	public String getName() {
 		return name;
 	}
 
-	public void setname(String name) {
+	public void setName(String name) {
 		this.name = name;
 	}
 
@@ -68,6 +74,14 @@ public class ChannelDAO {
 		this.owner = owner;
 	}
 
+	public boolean isPublicChannel() {
+		return publicChannel;
+	}
+
+	public void setPublicChannel(boolean publicChannel) {
+		this.publicChannel = publicChannel;
+	}
+
 	public String[] getMembers() {
 		return members;
 	}
@@ -76,22 +90,25 @@ public class ChannelDAO {
 		this.members = members;
 	}
 
-	public void setVisibility(boolean publicChannel) {
-		this.publicChannel = publicChannel;
+	public boolean isGarbage() {
+		return garbage;
 	}
 
-	public boolean getVisibility() {
-		return publicChannel;
-	}
-
-	public Channel toChannel() {
-		return new Channel(idChannel, name, owner, publicChannel, members);
+	public void setGarbage(boolean garbage) {
+		this.garbage = garbage;
 	}
 
 	@Override
 	public String toString() {
-		return "ChannelDAO [_rid=" + _rid + ", _ts=" + _ts + ", idChannel=" + idChannel + ", name=" + name + ", owner=" + owner
-				+ ", publicChannel=" + publicChannel + ", usersIds=" + Arrays.toString(members) + "]";
+		return "ChannelDAO{" +
+				"_rid='" + _rid + '\'' +
+				", _ts='" + _ts + '\'' +
+				", idChannel='" + idChannel + '\'' +
+				", name='" + name + '\'' +
+				", owner='" + owner + '\'' +
+				", publicChannel=" + publicChannel +
+				", members=" + Arrays.toString(members) +
+				", garbage=" + garbage +
+				'}';
 	}
-
 }

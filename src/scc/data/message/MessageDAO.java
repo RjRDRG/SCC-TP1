@@ -11,17 +11,16 @@ public class MessageDAO {
 	private String idPhoto;
 	private String channel;
 	private String replied;
+	private boolean garbage;
 
 	public MessageDAO() {
 	}
 
 	public MessageDAO(Message msg) {
-		this(msg.getIdMessage(), msg.getSend(), msg.getDest(), msg.getText(), msg.getIdPhoto(), msg.getChannel(),
-				msg.getReplied());
+		this(msg.getIdMessage(), msg.getSend(), msg.getDest(), msg.getText(), msg.getIdPhoto(), msg.getChannel(), msg.getReplied());
 	}
 
-	public MessageDAO(String idMessage, String send, String dest, String text, String idPhoto, String channel,
-					  String replied) {
+	public MessageDAO(String idMessage, String send, String dest, String text, String idPhoto, String channel, String replied) {
 		super();
 		this.idMessage = idMessage;
 		this.send = send;
@@ -31,6 +30,7 @@ public class MessageDAO {
 
 		this.replied = replied;
 		this.channel = channel;
+		this.garbage = false;
 	}
 
 	public String get_rid() {
@@ -57,19 +57,19 @@ public class MessageDAO {
 		this.idMessage = idMessage;
 	}
 
-	public String getsend() {
+	public String getSend() {
 		return send;
 	}
 
-	public void setsend(String send) {
+	public void setSend(String send) {
 		this.send = send;
 	}
 
-	public String getdest() {
+	public String getDest() {
 		return dest;
 	}
 
-	public void setdest(String dest) {
+	public void setDest(String dest) {
 		this.dest = dest;
 	}
 
@@ -85,16 +85,8 @@ public class MessageDAO {
 		return idPhoto;
 	}
 
-	public void setIdPhoto(String id) {
-		this.idPhoto = id;
-	}
-
-	public Message toMessage() {
-		return new Message(idMessage, send, dest, text, idPhoto, channel, replied);
-	}
-
-	public String getReplied() {
-		return replied;
+	public void setIdPhoto(String idPhoto) {
+		this.idPhoto = idPhoto;
 	}
 
 	public String getChannel() {
@@ -105,14 +97,19 @@ public class MessageDAO {
 		this.channel = channel;
 	}
 
+	public String getReplied() {
+		return replied;
+	}
+
 	public void setReplied(String replied) {
 		this.replied = replied;
 	}
 
-	@Override
-	public String toString() {
-		return "MessageDAO [_rid=" + _rid + ", _ts=" + _ts + ", idMessage=" + idMessage + ", send=" + send + ", dest=" + dest
-				+ "idPhoto=" + idPhoto + "]";
+	public boolean isGarbage() {
+		return garbage;
 	}
 
+	public void setGarbage(boolean garbage) {
+		this.garbage = garbage;
+	}
 }

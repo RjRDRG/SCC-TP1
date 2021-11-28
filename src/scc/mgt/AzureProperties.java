@@ -24,18 +24,6 @@ public class AzureProperties
 		return props;
 	}
 
-	public static synchronized Properties getProperties() {
-		if( props == null || props.size() == 0) {
-			props = new Properties();
-			try {
-				props.load( new FileInputStream("WEB-INF/" + PROPS_FILE));
-			} catch (Exception e) {
-				// do nothing
-			}
-		}
-		return props;
-	}
-
 	public static String getProperty(ServletContext ctx, String key) {
 		String val = null;
 		try {
@@ -49,10 +37,22 @@ public class AzureProperties
 		return val;
 	}
 
+	public static synchronized Properties getProperties() {
+		if( props == null || props.size() == 0) {
+			props = new Properties();
+			try {
+				props.load( new FileInputStream("WEB-INF/" + PROPS_FILE));
+			} catch (Exception e) {
+				// do nothing
+			}
+		}
+		return props;
+	}
+
 	public static String getProperty(String key) {
 		String val = null;
 		try {
-			val = System.getenv( key);
+			val = System.getenv(key);
 		} catch( Exception e) {
 			// do nothing
 		}

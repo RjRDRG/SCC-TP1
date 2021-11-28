@@ -9,6 +9,9 @@ public class Channel {
 	private boolean publicChannel;
 	private String[] members;
 
+	public Channel() {
+	}
+
 	public Channel(String idChannel, String name, String owner, boolean publicChannel, String[] members) {
 		super();
 		this.idChannel = idChannel;
@@ -50,18 +53,22 @@ public class Channel {
 		this.owner = owner;
 	}
 
-	public void setVisibility(boolean publicChannel) {
-		this.publicChannel = publicChannel;
-	}
-	
-	public boolean getVisibility() {
+	public boolean isPublicChannel() {
 		return publicChannel;
+	}
+
+	public void setPublicChannel(boolean publicChannel) {
+		this.publicChannel = publicChannel;
 	}
 
 	@Override
 	public String toString() {
-		return "Channel[idChannel=" + idChannel + ", name=" + name + ", owner=" + owner + ", publicChannel= " + publicChannel
-				+ ", usersIds=" + Arrays.toString(members) + "]";
+		return "Channel{" +
+				"idChannel='" + idChannel + '\'' +
+				", name='" + name + '\'' +
+				", owner='" + owner + '\'' +
+				", publicChannel=" + publicChannel +
+				", members=" + Arrays.toString(members) +
+				'}';
 	}
-
 }

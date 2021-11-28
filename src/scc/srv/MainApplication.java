@@ -1,5 +1,6 @@
 package scc.srv;
 
+import scc.resources.AuthenticationResource;
 import scc.resources.*;
 
 import java.util.HashSet;
@@ -22,6 +23,8 @@ public class MainApplication extends Application
 		singletons.add(new ChannelResource());
 		resources.add(UsersResource.class);
 		singletons.add(new UsersResource());
+		resources.add(AuthenticationResource.class);
+		singletons.add(new AuthenticationResource());
 	}
 
 	@Override
