@@ -2,6 +2,7 @@ package scc.mgt;
 
 import javax.servlet.ServletContext;
 import java.io.FileInputStream;
+import java.util.Map;
 import java.util.Properties;
 
 public class AzureProperties
@@ -50,6 +51,15 @@ public class AzureProperties
 	}
 
 	private static String getProperty(String key) {
-		return getProperties().getProperty(key);
+		String val = null;
+		try {
+			val = System.getenv( key);
+		} catch( Exception e) {
+			// do nothing
+		}
+		if( val != null)
+			return val;
+		val = getProperties().getProperty(key);
+		return val;
 	}
 }

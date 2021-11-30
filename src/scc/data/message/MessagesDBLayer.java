@@ -104,18 +104,6 @@ public class MessagesDBLayer {
 	
 	public void putMsg(MessageDAO msg) {
 		init();
-
-		if(cache!=null) {
-			try {
-				Long cnt = cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), new ObjectMapper().writeValueAsString(msg));
-				if (cnt > MAX_MSG_IN_CACHE)
-					cache.getResource().ltrim(RECENT_MSGS + msg.getChannel(), 0, (MAX_MSG_IN_CACHE - 1));
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
-		}
-
 		if(messages.createItem(msg).getStatusCode() >= 400)
 			throw new BadRequestException();
 	}
@@ -152,7 +140,7 @@ public class MessagesDBLayer {
 		if(limit > cachedMessages) {
 			messageDAOS.addAll(
 					messages.queryItems(
-							"SELECT * FROM Messages WHERE Messages.channel=\"" + channel + "\" ORDER BY Messages._ts DESC OFFSET " + (off + cachedMessages) + "LIMIT " + (limit - cachedMessages),
+							"SELECT * FROM Messages WHERE Messages.channel=\"" + channel + "\" ORDER BY Messages._ts DESC OFFSET " + (off + cachedMessages) + " LIMIT " + (limit - cachedMessages),
 							new CosmosQueryRequestOptions(), MessageDAO.class
 					)
 					.stream().collect(Collectors.toList())
@@ -161,7 +149,8 @@ public class MessagesDBLayer {
 
 		return messageDAOS;
 	}
-	
+
+	/*
 	public void updateMessage(MessageDAO msg) {
 		init();
 		if(cache!=null) {
@@ -188,14 +177,14 @@ public class MessagesDBLayer {
 		}
 		if(messages.replaceItem(msg, msg.getId(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
 			throw new BadRequestException();
-	}
+	}*/
 
 	public void deleteChannelsMessages(String channel) {
 		init();
 		if(cache!=null) {
 			cache.getResource().del(RECENT_MSGS + channel);
 		}
-		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=" + channel, new CosmosQueryRequestOptions(), MessageDAO.class);
+		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=\"" + channel + "\"", new CosmosQueryRequestOptions(), MessageDAO.class);
 	}
 
 	public void close() {

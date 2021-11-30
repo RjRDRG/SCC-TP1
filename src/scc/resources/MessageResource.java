@@ -43,6 +43,7 @@ public class MessageResource {
 	}
 
 
+	/*
 	@POST
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -51,6 +52,7 @@ public class MessageResource {
 		UsersDBLayer.getInstance(context).checkCookieUser(session, messageDAO.getSend());
 		MessagesDBLayer.getInstance(context).updateMessage(new MessageDAO (message));
 	}
+	 */
 
 
 	@GET
