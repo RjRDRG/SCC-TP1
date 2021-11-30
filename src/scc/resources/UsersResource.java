@@ -73,6 +73,15 @@ public class UsersResource
 	}
 
 
+	@GET
+	@Path("/channels/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String[] getChannels(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		UsersDBLayer.getInstance(context).checkCookieUser(session,id);
+		return UsersDBLayer.getInstance(context).getUserById(id).toUser().getChannelIds();
+	}
+
+
 	@POST
 	@Path("/subscribe/{id}/{channel}")
 	public void subscribe(@CookieParam("scc:session") Cookie session, @PathParam("id") String id, @PathParam("channel") String channel) {

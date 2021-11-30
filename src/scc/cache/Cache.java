@@ -15,7 +15,7 @@ public class Cache {
 		if(instance == null) {
 			if(!Boolean.parseBoolean(Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_CACHE")).orElse("true")))
 				return null;
-			
+
 			final JedisPoolConfig poolConfig = new JedisPoolConfig();
 			poolConfig.setMaxTotal(128);
 			poolConfig.setMaxIdle(128);

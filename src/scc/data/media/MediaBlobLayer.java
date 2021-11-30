@@ -32,10 +32,11 @@ public class MediaBlobLayer {
 		this.context = context;
 		this.containerClient = containerClient;
 	}
-	
+
 	public void upload(String id, byte[] contents) {
 		BlobClient blob = containerClient.getBlobClient(id);
-		blob.upload(BinaryData.fromBytes(contents));
+		if(!blob.exists())
+			blob.upload(BinaryData.fromBytes(contents));
 	}
 	
 	public byte[] download(String id) {
