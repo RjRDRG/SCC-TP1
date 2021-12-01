@@ -19,6 +19,7 @@ import scc.mgt.AzureProperties;
 import javax.servlet.ServletContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -101,8 +102,8 @@ public class MessagesDBLayer {
 	
 	public void putMsg(MessageDAO msg) {
 		init();
-		if(messages.createItem(msg).getStatusCode() >= 400)
-			throw new BadRequestException();
+		int status = messages.createItem(msg).getStatusCode();
+		if(status >= 400) throw new WebApplicationException(status);
 	}
 	
 	public MessageDAO getMsgById(String id) {

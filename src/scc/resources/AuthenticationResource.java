@@ -37,7 +37,7 @@ public class AuthenticationResource {
 			UsersDBLayer.getInstance(context).putSession(session);
 			return Response.ok().cookie(cookie).build();
 		} else
-			throw new NotAuthorizedException("Incorrect login");
+			throw new WebApplicationException(403);
 	}
 
 }

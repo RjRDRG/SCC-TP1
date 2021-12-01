@@ -19,6 +19,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Cookie;
 import java.util.List;
 import java.util.Optional;
@@ -93,8 +94,9 @@ public class UsersDBLayer {
 				e.printStackTrace();
 			}
 		}
-		if(users.createItem(user).getStatusCode() >= 400)
-			throw new BadRequestException();
+
+		int status = users.createItem(user).getStatusCode();
+		if(status >= 400) throw new WebApplicationException(status);
 	}
 	
 	public UserDAO getUserById(String id) {
@@ -122,8 +124,9 @@ public class UsersDBLayer {
 				e.printStackTrace();
 			}
 		}
-		if(users.replaceItem(user, user.getId(),new PartitionKey(user.getId()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
-			throw new BadRequestException();
+
+		int status = users.replaceItem(user, user.getId(),new PartitionKey(user.getId()), new CosmosItemRequestOptions()).getStatusCode();
+		if(status >= 400) throw new WebApplicationException(status);
 	}
 
 	

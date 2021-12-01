@@ -2,6 +2,7 @@ package scc.data.media;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.WebApplicationException;
 
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
@@ -42,7 +43,7 @@ public class MediaBlobLayer {
 	public byte[] download(String id) {
 		BlobClient result = containerClient.getBlobClient(id);
 		if(!result.exists())
-			throw new NotFoundException();
+			throw new WebApplicationException(404);
 
 		return result.downloadContent().toBytes();	
 	}
