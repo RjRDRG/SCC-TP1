@@ -125,6 +125,36 @@ public class MessagesDBLayer {
 		return messageDAOS;
 	}
 
+	public void updateMessage(MessageDAO msg) {
+		if(cache != null) {
+			try (Jedis jedis = cache.getResource()) {
+				List<String> lst = jedis.lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
+				ObjectMapper mapper = new ObjectMapper();
+				for (String s : lst) {
+					MessageDAO m = null;
+					try {
+						m = mapper.readValue(s, MessageDAO.class);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+						throw new RuntimeException(e);
+					}
+					if (msg.equals(m)) {
+						delMsgById(m.getId());
+						try {
+							jedis.lpush(RECENT_MSGS + msg.getChannel(), mapper.writeValueAsString(msg));
+						} catch (JsonProcessingException e) {
+							e.printStackTrace();
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		int status = messages.replaceItem(msg, msg.getId(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode();
+		if(status >= 400) throw new WebApplicationException(status);
+	}
+
 	public void deleteChannelsMessages(String channel) {
 		if(cache!=null) {
 			try(Jedis jedis = cache.getResource()) {

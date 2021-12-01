@@ -45,6 +45,19 @@ public class MessageResource {
 		return messageId;
 	}
 
+	/**
+	 * Update a new message.
+	 */
+	@POST
+	@Path("/update")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void update(Message message) {
+		messagesDBLayer.updateMessage(new MessageDAO (message));
+	}
+
+	/**
+	 * Delete a message.
+	 */
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
