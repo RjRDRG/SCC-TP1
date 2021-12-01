@@ -42,34 +42,11 @@ public class MessageResource {
 		return messageId;
 	}
 
-
-	/*
-	@POST
-	@Path("/update")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public void update(@CookieParam("scc:session") Cookie session, Message message) {
-		MessageDAO messageDAO = MessagesDBLayer.getInstance(context).getMsgById(message.getId());
-		UsersDBLayer.getInstance(context).checkCookieUser(session, messageDAO.getSend());
-		MessagesDBLayer.getInstance(context).updateMessage(new MessageDAO (message));
-	}
-	 */
-
-
-	@GET
-	@Path("/{channel}/{off}/{limit}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Message> get(@CookieParam("scc:session") Cookie session, @PathParam("channel") String channel, @PathParam("off") String off, @PathParam("limit") String limit) {
-		ChannelDAO channelDAO = ChannelsDBLayer.getInstance(context).getChannelById(channel);
-		UsersDBLayer.getInstance(context).checkCookieUser(session,channelDAO.getMembers());
-		return MessagesDBLayer.getInstance(context).getMessages(channel,Integer.parseInt(off), Integer.parseInt(limit)).stream().map(MessageDAO::toMessage).collect(Collectors.toList());
-	}
-
-
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 		MessageDAO messageDAO = MessagesDBLayer.getInstance(context).getMsgById(id);
-		UsersDBLayer.getInstance(context).checkCookieUser(session, messageDAO.getSend());
+		UsersDBLayer.getInstance(context).checkCookieUser(session, messageDAO.getUser());
 		MessagesDBLayer.getInstance(context).delMsgById(id);
 	}
 

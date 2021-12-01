@@ -74,9 +74,8 @@ public class UsersResource
 		return UsersDBLayer.getInstance(context).getUserById(id).toUser();
 	}
 
-
 	@GET
-	@Path("/channels/{id}")
+	@Path("/{id}/channels")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String[] getChannels(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 		UsersDBLayer.getInstance(context).checkCookieUser(session,id);
