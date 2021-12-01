@@ -1,17 +1,12 @@
 package scc.resources;
 
 import scc.data.authentication.Credentials;
-import scc.data.authentication.Login;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
-import scc.data.message.MessagesDBLayer;
 import scc.data.user.User;
 import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
-
-import javax.servlet.ServletContext;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
@@ -23,16 +18,18 @@ import java.util.stream.Collectors;
 @Path("/user")
 public class UsersResource
 {
-	private ChannelsDBLayer channelsDBLayer;
-	private UsersDBLayer usersDBLayer;
+	private static boolean started = false;
+	private static ChannelsDBLayer channelsDBLayer;
+	private static UsersDBLayer usersDBLayer;
 
 	public UsersResource() {}
 
-	@PUT
-	@Path("/start")
 	public void start() {
-		this.channelsDBLayer = new ChannelsDBLayer();
-		this.usersDBLayer = new UsersDBLayer();
+		if(!started) {
+			channelsDBLayer = new ChannelsDBLayer();
+			usersDBLayer = new UsersDBLayer();
+			started = true;
+		}
 	}
 
 	@POST
@@ -40,6 +37,8 @@ public class UsersResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Credentials create(User user) {
+		start();
+
 		String userId = UUID.randomUUID().toString().replace("-", "");
 		user.setId(userId);
 
@@ -53,6 +52,8 @@ public class UsersResource
 	@Path("/update")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void update(@CookieParam("scc:session") Cookie session, User user) {
+		start();
+
 		usersDBLayer.checkCookieUser(session,user.getId());
 		usersDBLayer.updateUser(new UserDAO(user));
 	}
@@ -61,6 +62,8 @@ public class UsersResource
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		start();
+
 		usersDBLayer.checkCookieUser(session,id);
 		usersDBLayer.discardUserById(id);
 	}
@@ -68,6 +71,8 @@ public class UsersResource
 	@DELETE
 	@Path("/force/{id}")
 	public void forceDelete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		start();
+
 		usersDBLayer.checkCookieUser(session,id);
 		usersDBLayer.delUserById(id);
 	}
@@ -77,6 +82,8 @@ public class UsersResource
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public User get(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		start();
+
 		usersDBLayer.checkCookieUser(session,id);
 		return usersDBLayer.getUserById(id).toUser();
 	}
@@ -85,6 +92,8 @@ public class UsersResource
 	@Path("/{id}/channels")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String[] getChannels(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		start();
+
 		usersDBLayer.checkCookieUser(session,id);
 		return usersDBLayer.getUserById(id).toUser().getChannelIds();
 	}
@@ -93,6 +102,8 @@ public class UsersResource
 	@POST
 	@Path("/subscribe/{id}/{channel}")
 	public void subscribe(@CookieParam("scc:session") Cookie session, @PathParam("id") String id, @PathParam("channel") String channel) {
+		start();
+
 		usersDBLayer.checkCookieUser(session, id);
 
 		ChannelDAO channelDAO = channelsDBLayer.getChannelById(channel);
@@ -115,6 +126,8 @@ public class UsersResource
 	@POST
 	@Path("/invite/{id}/{channel}/{other}")
 	public void invite(@CookieParam("scc:session") Cookie session, @PathParam("id") String id, @PathParam("channel") String channel, @PathParam("other") String other) {
+		start();
+
 		usersDBLayer.checkCookieUser(session, id);
 
 		ChannelDAO channelDAO = channelsDBLayer.getChannelById(channel);

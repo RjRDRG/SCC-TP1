@@ -23,14 +23,16 @@ import javax.ws.rs.core.MediaType;
 @Path("/media")
 public class MediaResource
 {
-	private MediaBlobLayer mediaBlobLayer;
+	private static boolean started = false;
+	private static MediaBlobLayer mediaBlobLayer;
 
 	public MediaResource() {}
 
-	@PUT
-	@Path("/start")
 	public void start() {
-		this.mediaBlobLayer = new MediaBlobLayer();
+		if(!started) {
+			mediaBlobLayer = new MediaBlobLayer();
+			started = true;
+		}
 	}
 
 	@POST
@@ -38,6 +40,8 @@ public class MediaResource
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String upload(byte[] contents) {
+		start();
+
 		String id = Hash.of(contents);
 		mediaBlobLayer.upload(id, contents);
 		return id;
@@ -48,12 +52,16 @@ public class MediaResource
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public byte[] download(@PathParam("id") String id) {
+		start();
+
 		return mediaBlobLayer.download(id);
 	}
 
 	@DELETE
 	@Path("/{id}")
 	public void delete(@PathParam("id") String id) {
+		start();
+
 		mediaBlobLayer.delete(id);
 	}
 }

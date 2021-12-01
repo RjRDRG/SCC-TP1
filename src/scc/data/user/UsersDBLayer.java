@@ -11,6 +11,7 @@ import com.azure.cosmos.models.PartitionKey;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import scc.data.authentication.Session;
 import scc.cache.Cache;
@@ -53,7 +54,9 @@ public class UsersDBLayer {
 
 	public void delUserById(String id) {
 		if(cache!=null) {
-			cache.getResource().del(USER + id);
+			try(Jedis jedis = cache.getResource()) {
+				jedis.del(USER + id);
+			}
 		}
 		PartitionKey key = new PartitionKey(id);
 		if(users.deleteItem(id, key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
@@ -62,8 +65,8 @@ public class UsersDBLayer {
 	
 	public void createUser(UserDAO user) {
 		if(cache!=null) {
-			try {
-				cache.getResource().set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
+			try(Jedis jedis = cache.getResource()){
+				jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
@@ -75,12 +78,14 @@ public class UsersDBLayer {
 	
 	public UserDAO getUserById(String id) {
 		if(cache!=null) {
-			String res = cache.getResource().get(USER + id);
-			if (res != null) {
-				try {
-					return new ObjectMapper().readValue(res, UserDAO.class);
-				} catch (JsonProcessingException e) {
-					e.printStackTrace();
+			try(Jedis jedis = cache.getResource()) {
+				String res = jedis.get(USER + id);
+				if (res != null) {
+					try {
+						return new ObjectMapper().readValue(res, UserDAO.class);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -90,8 +95,8 @@ public class UsersDBLayer {
 	
 	public void updateUser(UserDAO user) {
 		if(cache!=null) {
-			try {
-				cache.getResource().set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
+			try(Jedis jedis = cache.getResource()) {
+				jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
@@ -111,16 +116,19 @@ public class UsersDBLayer {
 	}
 
 	public void putSession(Session s) {
-		try {
-			cache.getResource().set(s.getSessionId(), new ObjectMapper().writeValueAsString(s));
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+		if(cache!=null) {
+			try (Jedis jedis = cache.getResource()) {
+				jedis.set(s.getSessionId(), new ObjectMapper().writeValueAsString(s));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
 	public Session getSession(String sessionID) {
-		try {
-			return new ObjectMapper().readValue(cache.getResource().get(sessionID), Session.class);
+		try(Jedis jedis = cache.getResource()) {
+			return new ObjectMapper().readValue(jedis.get(sessionID), Session.class);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new NotAuthorizedException("No valid session initialized");

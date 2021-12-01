@@ -11,6 +11,7 @@ import com.azure.cosmos.models.PartitionKey;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
 import javax.ws.rs.BadRequestException;
@@ -52,22 +53,24 @@ public class MessagesDBLayer {
 			throw new BadRequestException();
 
 		if(cache!=null) {
-			List<String> msgs = cache.getResource().lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
+			try(Jedis jedis = cache.getResource()) {
+				List<String> msgs = jedis.lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
 
-			if (!msgs.isEmpty()) {
-				cache.getResource().del(RECENT_MSGS + msg.getChannel());
+				if (!msgs.isEmpty()) {
+					jedis.del(RECENT_MSGS + msg.getChannel());
 
-				ObjectMapper mapper = new ObjectMapper();
+					ObjectMapper mapper = new ObjectMapper();
 
-				for (String s : msgs) {
-					MessageDAO m = null;
-					try {
-						m = mapper.readValue(s, MessageDAO.class);
-					} catch (JsonProcessingException e) {
-						e.printStackTrace();
-					}
-					if (!m.getId().equals(id)) {
-						cache.getResource().lpush(RECENT_MSGS + msg.getChannel(), s);
+					for (String s : msgs) {
+						MessageDAO m = null;
+						try {
+							m = mapper.readValue(s, MessageDAO.class);
+						} catch (JsonProcessingException e) {
+							e.printStackTrace();
+						}
+						if (!m.getId().equals(id)) {
+							jedis.lpush(RECENT_MSGS + msg.getChannel(), s);
+						}
 					}
 				}
 			}
@@ -91,19 +94,21 @@ public class MessagesDBLayer {
 		int cachedMessages = 0;
 
 		if(cache!=null) {
-			if (off < MAX_MSG_IN_CACHE) {
-				List<MessageDAO> cacheMsgs = cache.getResource().lrange(RECENT_MSGS + channel, off, Math.min(limit - 1, MAX_MSG_IN_CACHE - 1)).stream().map(
-					s -> {
-						try {
-							return m.readValue(s, MessageDAO.class);
-						} catch (JsonProcessingException e) {
-							e.printStackTrace();
-							throw new RuntimeException(e);
-						}
-					}
-				).collect(Collectors.toList());
-				cachedMessages = cacheMsgs.size();
-				messageDAOS.addAll(cacheMsgs);
+			try(Jedis jedis = cache.getResource()) {
+				if (off < MAX_MSG_IN_CACHE) {
+					List<MessageDAO> cacheMsgs = jedis.lrange(RECENT_MSGS + channel, off, Math.min(limit - 1, MAX_MSG_IN_CACHE - 1)).stream().map(
+							s -> {
+								try {
+									return m.readValue(s, MessageDAO.class);
+								} catch (JsonProcessingException e) {
+									e.printStackTrace();
+									throw new RuntimeException(e);
+								}
+							}
+					).collect(Collectors.toList());
+					cachedMessages = cacheMsgs.size();
+					messageDAOS.addAll(cacheMsgs);
+				}
 			}
 		}
 
@@ -122,7 +127,9 @@ public class MessagesDBLayer {
 
 	public void deleteChannelsMessages(String channel) {
 		if(cache!=null) {
-			cache.getResource().del(RECENT_MSGS + channel);
+			try(Jedis jedis = cache.getResource()) {
+				jedis.del(RECENT_MSGS + channel);
+			}
 		}
 		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=\"" + channel + "\"", new CosmosQueryRequestOptions(), MessageDAO.class);
 	}

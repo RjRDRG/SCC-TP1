@@ -13,15 +13,17 @@ import scc.data.user.UsersDBLayer;
 @Path("/auth")
 public class AuthenticationResource {
 
-	private UsersDBLayer usersDBLayer;
+	private static boolean started = false;
+	private static UsersDBLayer usersDBLayer;
 
 	public AuthenticationResource() {
 	}
 
-	@PUT
-	@Path("/start")
 	public void start() {
-		this.usersDBLayer = new UsersDBLayer();
+		if(!started) {
+			usersDBLayer = new UsersDBLayer();
+			started = true;
+		}
 	}
 
 	@POST
@@ -29,6 +31,8 @@ public class AuthenticationResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response auth(Login login) {
+		start();
+
 		UserDAO userDAO = usersDBLayer.getUserById(login.getUser());
 		if (userDAO == null)
 			throw new NotFoundException();

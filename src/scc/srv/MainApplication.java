@@ -30,6 +30,9 @@ public class MainApplication extends Application
 
 		resources.add(AuthenticationResource.class);
 		singletons.add(new AuthenticationResource());
+
+		resources.add(TrendResource.class);
+		singletons.add(new TrendResource());
 	}
 
 	@Override

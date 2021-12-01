@@ -7,9 +7,7 @@ import scc.data.message.MessagesDBLayer;
 import scc.data.user.UsersDBLayer;
 
 import java.util.UUID;
-import javax.servlet.ServletContext;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 
@@ -18,17 +16,18 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/message")
 public class MessageResource {
-
-	private MessagesDBLayer messagesDBLayer;
-	private UsersDBLayer usersDBLayer;
+	private static boolean started = false;
+	private static MessagesDBLayer messagesDBLayer;
+	private static UsersDBLayer usersDBLayer;
 
 	public MessageResource() {}
 
-	@PUT
-	@Path("/start")
 	public void start() {
-		this.messagesDBLayer = new MessagesDBLayer();
-		this.usersDBLayer = new UsersDBLayer();
+		if(!started) {
+			messagesDBLayer = new MessagesDBLayer();
+			usersDBLayer = new UsersDBLayer();
+			started = true;
+		}
 	}
 
 	@POST
@@ -36,6 +35,8 @@ public class MessageResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String create(Message message) {
+		start();
+
 		String messageId = UUID.randomUUID().toString().replace("-", "");;
 		message.setId(messageId);
 
@@ -47,6 +48,8 @@ public class MessageResource {
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+		start();
+
 		MessageDAO messageDAO = messagesDBLayer.getMsgById(id);
 		usersDBLayer.checkCookieUser(session, messageDAO.getUser());
 		messagesDBLayer.delMsgById(id);

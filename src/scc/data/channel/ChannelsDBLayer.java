@@ -11,6 +11,7 @@ import com.azure.cosmos.models.PartitionKey;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
 import javax.ws.rs.BadRequestException;
@@ -40,7 +41,9 @@ public class ChannelsDBLayer {
 
 	public void delChannelById(String id) {
 		if(cache!=null) {
-			cache.getResource().del(CHANNEL + id);
+			try(Jedis jedis = cache.getResource()) {
+				jedis.del(CHANNEL + id);
+			}
 		}
 
 		int status = channels.deleteItem(id, new PartitionKey(id), new CosmosItemRequestOptions()).getStatusCode();
@@ -55,8 +58,8 @@ public class ChannelsDBLayer {
 
 	public void createChannel(ChannelDAO channel) {
 		if(cache!=null) {
-			try {
-				cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			try(Jedis jedis = cache.getResource()) {
+				jedis.set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
@@ -68,12 +71,14 @@ public class ChannelsDBLayer {
 
 	public ChannelDAO getChannelById(String id) {
 		if(cache!=null) {
-			String res = cache.getResource().get(CHANNEL + id);
-			if (res != null) {
-				try {
-					return new ObjectMapper().readValue(res, ChannelDAO.class);
-				} catch (JsonProcessingException e) {
-					e.printStackTrace();
+			try(Jedis jedis = cache.getResource()) {
+				String res = jedis.get(CHANNEL + id);
+				if (res != null) {
+					try {
+						return new ObjectMapper().readValue(res, ChannelDAO.class);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -84,8 +89,8 @@ public class ChannelsDBLayer {
 
 	public void updateChannel(ChannelDAO channel) {
 		if(cache!=null) {
-			try {
-				cache.getResource().set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+			try(Jedis jedis = cache.getResource()) {
+				jedis.set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
