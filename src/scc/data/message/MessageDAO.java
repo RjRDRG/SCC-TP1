@@ -31,7 +31,7 @@ public class MessageDAO {
 	}
 
 	public Message toMessage() {
-		return new Message(id, send, dest, text, idPhoto, channel, replied);
+		return new Message(id, dest, send, text, idPhoto, channel, replied);
 	}
 
 	public String get_rid() {

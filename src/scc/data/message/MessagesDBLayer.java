@@ -97,9 +97,6 @@ public class MessagesDBLayer {
 				}
 			}
 		}
-
-		if(msg.getIdPhoto() != null && msg.getIdPhoto().equals(""))
-			MediaBlobLayer.getInstance(context).delete(msg.getIdPhoto());
 	}
 	
 	public void putMsg(MessageDAO msg) {
@@ -123,17 +120,18 @@ public class MessagesDBLayer {
 
 		if(cache!=null) {
 			if (off < MAX_MSG_IN_CACHE) {
-				cachedMessages = Math.min(limit, MAX_MSG_IN_CACHE - off);
-				messageDAOS.addAll(cache.getResource().lrange(RECENT_MSGS + channel, off, Math.min(limit - 1, MAX_MSG_IN_CACHE - 1)).stream().map(
-						s -> {
-							try {
-								return m.readValue(s, MessageDAO.class);
-							} catch (JsonProcessingException e) {
-								e.printStackTrace();
-								throw new RuntimeException(e);
-							}
+				List<MessageDAO> cacheMsgs = cache.getResource().lrange(RECENT_MSGS + channel, off, Math.min(limit - 1, MAX_MSG_IN_CACHE - 1)).stream().map(
+					s -> {
+						try {
+							return m.readValue(s, MessageDAO.class);
+						} catch (JsonProcessingException e) {
+							e.printStackTrace();
+							throw new RuntimeException(e);
 						}
-				).collect(Collectors.toList()));
+					}
+				).collect(Collectors.toList());
+				cachedMessages = cacheMsgs.size();
+				messageDAOS.addAll(cacheMsgs);
 			}
 		}
 

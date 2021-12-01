@@ -1,5 +1,7 @@
 package scc.resources;
 
+import scc.data.authentication.Credentials;
+import scc.data.authentication.Login;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
 import scc.data.user.User;
@@ -17,7 +19,7 @@ import java.util.stream.Collectors;
 /**
  * Resource for managing users.
  */
-@Path("/users")
+@Path("/user")
 public class UsersResource
 {
 	@Context
@@ -30,13 +32,13 @@ public class UsersResource
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String create(User user) {
+	public Credentials create(User user) {
 		String userId = UUID.randomUUID().toString().replace("-", "");
 		user.setId(userId);
 
 		UsersDBLayer.getInstance(context).createUser(new UserDAO(user));
 
-		return userId;
+		return new Credentials(userId,user.getPwd());
 	}
 	
 
