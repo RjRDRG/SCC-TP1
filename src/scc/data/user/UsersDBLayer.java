@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import redis.clients.jedis.JedisPool;
 import scc.data.authentication.Session;
 import scc.cache.Cache;
-import scc.mgt.AzureProperties;
 import javax.servlet.ServletContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
@@ -29,54 +28,30 @@ public class UsersDBLayer {
 	private static final String DB_NAME = "scc2122db";
 	public static final String USER = "user:";
 
-	private static UsersDBLayer instance;
-
-	public static synchronized UsersDBLayer getInstance(ServletContext context) {
-		if(instance == null) {
-			try {
-				CosmosClient client = new CosmosClientBuilder()
-						.endpoint(AzureProperties.getProperty(context, "COSMOSDB_URL"))
-						.key(AzureProperties.getProperty(context, "COSMOSDB_KEY"))
-						.gatewayMode()		// replace by .directMode() for better performance
-						.consistencyLevel(ConsistencyLevel.SESSION)
-						.connectionSharingAcrossClientsEnabled(true)
-						.contentResponseOnWriteEnabled(true)
-						.buildClient();
-				JedisPool cache = Cache.getInstance(context);
-				instance = new UsersDBLayer(context, client, cache);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return instance;
-	}
-
-	private final ServletContext context;
-	private final CosmosClient client;
+	private final CosmosContainer users;
 	private final JedisPool cache;
-	private CosmosContainer users;
 	
-	public UsersDBLayer(ServletContext context, CosmosClient client, JedisPool cache) {
-		this.context = context;
-		this.client = client;
-		this.cache = cache;
-	}
-	
-	private synchronized void init() {
-		if(users != null) return;
+	public UsersDBLayer() {
+		CosmosClient client = new CosmosClientBuilder()
+				.endpoint(System.getenv("COSMOSDB_URL"))
+				.key(System.getenv("COSMOSDB_KEY"))
+				.gatewayMode()		// replace by .directMode() for better performance
+				.consistencyLevel(ConsistencyLevel.SESSION)
+				.connectionSharingAcrossClientsEnabled(true)
+				.contentResponseOnWriteEnabled(true)
+				.buildClient();
+		this.cache = Cache.getInstance();
 		CosmosDatabase db = client.getDatabase(DB_NAME);
 		users = db.getContainer("Users");
 	}
 
 	public void discardUserById(String id) {
-		init();
 		UserDAO userDAO = getUserById(id);
 		userDAO.setGarbage(true);
 		updateUser(userDAO);
 	}
 
 	public void delUserById(String id) {
-		init();
 		if(cache!=null) {
 			cache.getResource().del(USER + id);
 		}
@@ -86,7 +61,6 @@ public class UsersDBLayer {
 	}
 	
 	public void createUser(UserDAO user) {
-		init();
 		if(cache!=null) {
 			try {
 				cache.getResource().set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
@@ -100,7 +74,6 @@ public class UsersDBLayer {
 	}
 	
 	public UserDAO getUserById(String id) {
-		init();
 		if(cache!=null) {
 			String res = cache.getResource().get(USER + id);
 			if (res != null) {
@@ -116,7 +89,6 @@ public class UsersDBLayer {
 	}
 	
 	public void updateUser(UserDAO user) {
-		init();
 		if(cache!=null) {
 			try {
 				cache.getResource().set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
@@ -131,18 +103,14 @@ public class UsersDBLayer {
 
 	
 	public List<UserDAO> getUsers(int off, int limit) {
-		init();
 		return users.queryItems("SELECT * FROM Users OFFSET "+off+" LIMIT "+limit, new CosmosQueryRequestOptions(), UserDAO.class).stream().collect(Collectors.toList());
 	}
 
     public List<UserDAO> getDeletedUsers() {
-		init();
 		return users.queryItems("SELECT * FROM Users WHERE garbage=true", new CosmosQueryRequestOptions(), UserDAO.class).stream().collect(Collectors.toList());
 	}
 
 	public void putSession(Session s) {
-		init();
-
 		try {
 			cache.getResource().set(s.getSessionId(), new ObjectMapper().writeValueAsString(s));
 		} catch (JsonProcessingException e) {
@@ -164,10 +132,10 @@ public class UsersDBLayer {
 	 */
 	public void checkCookieUser(Cookie session, String[] ids) throws NotAuthorizedException {
 		boolean enable = Boolean.parseBoolean(
-				Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_AUTH")).orElse("false")
+				Optional.ofNullable(System.getenv("ENABLE_AUTH")).orElse("false")
 		);
 		enable = enable && Boolean.parseBoolean(
-				Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_CACHE")).orElse("true")
+				Optional.ofNullable(System.getenv("ENABLE_CACHE")).orElse("true")
 		);
 		if(!enable) return;
 
@@ -185,10 +153,10 @@ public class UsersDBLayer {
 	 */
 	public void checkCookieUser(Cookie session, String id) throws NotAuthorizedException {
 		boolean enable = Boolean.parseBoolean(
-				Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_AUTH")).orElse("false")
+				Optional.ofNullable(System.getenv("ENABLE_AUTH")).orElse("false")
 		);
 		enable = enable && Boolean.parseBoolean(
-				Optional.ofNullable(AzureProperties.getProperty(context, "ENABLE_CACHE")).orElse("true")
+				Optional.ofNullable(System.getenv("ENABLE_CACHE")).orElse("true")
 		);
 		if(!enable) return;
 
@@ -207,9 +175,5 @@ public class UsersDBLayer {
 		if (s == null || s.getIdUser() == null || s.getIdUser().length() == 0)
 			throw new NotAuthorizedException("No valid session initialized");
 		return s;
-	}
-
-	public void close() {
-		client.close();
 	}
 }

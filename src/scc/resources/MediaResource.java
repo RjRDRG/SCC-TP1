@@ -1,6 +1,8 @@
 package scc.resources;
 
+import scc.data.channel.ChannelsDBLayer;
 import scc.data.media.MediaBlobLayer;
+import scc.data.message.MessagesDBLayer;
 import scc.data.user.UsersDBLayer;
 import scc.utils.Hash;
 
@@ -21,10 +23,15 @@ import javax.ws.rs.core.MediaType;
 @Path("/media")
 public class MediaResource
 {
-	@Context ServletContext context;
+	private MediaBlobLayer mediaBlobLayer;
 
 	public MediaResource() {}
 
+	@PUT
+	@Path("/start")
+	public void start() {
+		this.mediaBlobLayer = new MediaBlobLayer();
+	}
 
 	@POST
 	@Path("/")
@@ -32,7 +39,7 @@ public class MediaResource
 	@Produces(MediaType.APPLICATION_JSON)
 	public String upload(byte[] contents) {
 		String id = Hash.of(contents);
-		MediaBlobLayer.getInstance(context).upload(id, contents);
+		mediaBlobLayer.upload(id, contents);
 		return id;
 	}
 
@@ -41,12 +48,12 @@ public class MediaResource
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public byte[] download(@PathParam("id") String id) {
-		return MediaBlobLayer.getInstance(context).download(id);
+		return mediaBlobLayer.download(id);
 	}
 
 	@DELETE
 	@Path("/{id}")
 	public void delete(@PathParam("id") String id) {
-		MediaBlobLayer.getInstance(context).delete(id);
+		mediaBlobLayer.delete(id);
 	}
 }
