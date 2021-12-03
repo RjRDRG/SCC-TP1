@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class MessagesDBLayer {
 	private static final String DB_NAME = "scc2122db";
-	private static final String RECENT_MSGS = "MostRecentMsgs";
+	private static final String RECENT_MSGS = "mostRecentMsgs:";
 	private static final int MAX_MSG_IN_CACHE = 20;
 
 	private final CosmosContainer messages;
@@ -49,32 +49,8 @@ public class MessagesDBLayer {
 			throw new NotFoundException();
 
 		PartitionKey key = new PartitionKey(msg.getChannel());
-		if(messages.deleteItem(msg.getId(), key, new CosmosItemRequestOptions()).getStatusCode() >= 400)
-			throw new BadRequestException();
-
-		if(cache!=null) {
-			try(Jedis jedis = cache.getResource()) {
-				List<String> msgs = jedis.lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
-
-				if (!msgs.isEmpty()) {
-					jedis.del(RECENT_MSGS + msg.getChannel());
-
-					ObjectMapper mapper = new ObjectMapper();
-
-					for (String s : msgs) {
-						MessageDAO m = null;
-						try {
-							m = mapper.readValue(s, MessageDAO.class);
-						} catch (JsonProcessingException e) {
-							e.printStackTrace();
-						}
-						if (!m.getId().equals(id)) {
-							jedis.lpush(RECENT_MSGS + msg.getChannel(), s);
-						}
-					}
-				}
-			}
-		}
+		int status = messages.deleteItem(msg.getId(), key, new CosmosItemRequestOptions()).getStatusCode();
+		if(status >= 400) throw new WebApplicationException(status);
 	}
 	
 	public void putMsg(MessageDAO msg) {
@@ -126,42 +102,8 @@ public class MessagesDBLayer {
 	}
 
 	public void updateMessage(MessageDAO msg) {
-		if(cache != null) {
-			try (Jedis jedis = cache.getResource()) {
-				List<String> lst = jedis.lrange(RECENT_MSGS + msg.getChannel(), 0, -1);
-				ObjectMapper mapper = new ObjectMapper();
-				for (String s : lst) {
-					MessageDAO m = null;
-					try {
-						m = mapper.readValue(s, MessageDAO.class);
-					} catch (JsonProcessingException e) {
-						e.printStackTrace();
-						throw new RuntimeException(e);
-					}
-					if (msg.equals(m)) {
-						delMsgById(m.getId());
-						try {
-							jedis.lpush(RECENT_MSGS + msg.getChannel(), mapper.writeValueAsString(msg));
-						} catch (JsonProcessingException e) {
-							e.printStackTrace();
-						}
-						break;
-					}
-				}
-			}
-		}
-
 		int status = messages.replaceItem(msg, msg.getId(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
-	}
-
-	public void deleteChannelsMessages(String channel) {
-		if(cache!=null) {
-			try(Jedis jedis = cache.getResource()) {
-				jedis.del(RECENT_MSGS + channel);
-			}
-		}
-		messages.queryItems("DELETE FROM Messages WHERE Messages.channel=\"" + channel + "\"", new CosmosQueryRequestOptions(), MessageDAO.class);
 	}
 
 }

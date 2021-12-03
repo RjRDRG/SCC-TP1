@@ -46,16 +46,6 @@ public class MessageResource {
 	}
 
 	/**
-	 * Update a new message.
-	 */
-	@POST
-	@Path("/update")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public void update(Message message) {
-		messagesDBLayer.updateMessage(new MessageDAO (message));
-	}
-
-	/**
 	 * Delete a message.
 	 */
 	@DELETE

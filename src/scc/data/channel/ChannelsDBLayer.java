@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import scc.cache.Cache;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
@@ -57,14 +56,6 @@ public class ChannelsDBLayer {
 	}
 
 	public void createChannel(ChannelDAO channel) {
-		if(cache!=null) {
-			try(Jedis jedis = cache.getResource()) {
-				jedis.set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-			}
-		}
-
 		int status = channels.createItem(channel).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
 	}
@@ -88,13 +79,6 @@ public class ChannelsDBLayer {
 	}
 
 	public void updateChannel(ChannelDAO channel) {
-		if(cache!=null) {
-			try(Jedis jedis = cache.getResource()) {
-				jedis.set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-			}
-		}
 		int status = channels.replaceItem(channel, channel.getId(), new PartitionKey(channel.getId()), new CosmosItemRequestOptions()).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
 	}

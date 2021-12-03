@@ -64,14 +64,6 @@ public class UsersDBLayer {
 	}
 	
 	public void createUser(UserDAO user) {
-		if(cache!=null) {
-			try(Jedis jedis = cache.getResource()){
-				jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-			}
-		}
-
 		int status = users.createItem(user).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
 	}
@@ -94,14 +86,6 @@ public class UsersDBLayer {
 	}
 	
 	public void updateUser(UserDAO user) {
-		if(cache!=null) {
-			try(Jedis jedis = cache.getResource()) {
-				jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-			}
-		}
-
 		int status = users.replaceItem(user, user.getId(),new PartitionKey(user.getId()), new CosmosItemRequestOptions()).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
 	}
