@@ -95,7 +95,7 @@ public class ChannelsDBLayer {
 				e.printStackTrace();
 			}
 		}
-		if(channels.replaceItem(channel, channel.getId(), new PartitionKey(channel.getId()), new CosmosItemRequestOptions()).getStatusCode() >= 400)
-			throw new BadRequestException();
+		int status = channels.replaceItem(channel, channel.getId(), new PartitionKey(channel.getId()), new CosmosItemRequestOptions()).getStatusCode();
+		if(status >= 400) throw new WebApplicationException(status);
 	}
 }
