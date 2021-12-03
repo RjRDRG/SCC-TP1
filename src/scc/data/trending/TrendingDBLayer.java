@@ -21,6 +21,7 @@ public class TrendingDBLayer {
                 .key(System.getenv("COSMOSDB_KEY"))
                 .gatewayMode() // replace by .directMode() for better performance
                 .consistencyLevel(ConsistencyLevel.SESSION)
+                .multipleWriteRegionsEnabled(true)
                 .connectionSharingAcrossClientsEnabled(true)
                 .contentResponseOnWriteEnabled(true)
                 .buildClient();

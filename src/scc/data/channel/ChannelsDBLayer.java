@@ -29,7 +29,9 @@ public class ChannelsDBLayer {
 				.endpoint(System.getenv( "COSMOSDB_URL"))
 				.key(System.getenv( "COSMOSDB_KEY"))
 				.gatewayMode() // replace by .directMode() for better performance
-				.consistencyLevel(ConsistencyLevel.SESSION).connectionSharingAcrossClientsEnabled(true)
+				.multipleWriteRegionsEnabled(true)
+				.consistencyLevel(ConsistencyLevel.SESSION)
+				.connectionSharingAcrossClientsEnabled(true)
 				.contentResponseOnWriteEnabled(true).buildClient();
 
 		cache = Cache.getInstance();

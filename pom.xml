@@ -10,7 +10,6 @@
   <packaging>war</packaging>
 
   <name>SCC Maven Webapp</name>
-  <url>https://scc2122-app-westeurope-adrqrd.azurewebsites.net/</url>
 
   <properties> 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -154,7 +153,7 @@
           <schemaVersion>V2</schemaVersion>
           <authType>azure_cli</authType>
           <pricingTier>F1</pricingTier>
-          <region>westeurope</region>
+          <region>canadacentral</region>
           <runtime>
             <os>linux</os>
             <javaVersion>java11</javaVersion>
@@ -170,8 +169,8 @@
               </resource>
             </resources>
           </deployment>
-          <resourceGroup>scc2122-rg-westeurope-rjr</resourceGroup>
-          <appName>scc2122-app-westeurope-rjr</appName>
+          <resourceGroup>scc2122-rg-canadacentral-rjr</resourceGroup>
+          <appName>scc2122-app-canadacentral-rjr</appName>
         </configuration>
       </plugin>
     </plugins>
