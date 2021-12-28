@@ -1,20 +1,9 @@
 package scc.resources;
 
-import scc.data.channel.ChannelsDBLayer;
-import scc.data.media.MediaBlobLayer;
-import scc.data.message.MessagesDBLayer;
-import scc.data.user.UsersDBLayer;
+import scc.data.media.MediaVolumeLayer;
 import scc.utils.Hash;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletContext;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -24,13 +13,13 @@ import javax.ws.rs.core.MediaType;
 public class MediaResource
 {
 	private static boolean started = false;
-	private static MediaBlobLayer mediaBlobLayer;
+	private static MediaVolumeLayer mediaVolumeLayer;
 
 	public MediaResource() {}
 
 	public void start() {
 		if(!started) {
-			mediaBlobLayer = new MediaBlobLayer();
+			mediaVolumeLayer = new MediaVolumeLayer();
 			started = true;
 		}
 	}
@@ -43,7 +32,7 @@ public class MediaResource
 		start();
 
 		String id = Hash.of(contents);
-		mediaBlobLayer.upload(id, contents);
+		mediaVolumeLayer.upload(id, contents);
 		return id;
 	}
 
@@ -54,7 +43,7 @@ public class MediaResource
 	public byte[] download(@PathParam("id") String id) {
 		start();
 
-		return mediaBlobLayer.download(id);
+		return mediaVolumeLayer.download(id);
 	}
 
 	@DELETE
@@ -62,6 +51,6 @@ public class MediaResource
 	public void delete(@PathParam("id") String id) {
 		start();
 
-		mediaBlobLayer.delete(id);
+		mediaVolumeLayer.delete(id);
 	}
 }

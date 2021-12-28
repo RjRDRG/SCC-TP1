@@ -47,12 +47,6 @@ public class UsersDBLayer {
 		users = db.getContainer("Users");
 	}
 
-	public void discardUserById(String id) {
-		UserDAO userDAO = getUserById(id);
-		userDAO.setGarbage(true);
-		updateUser(userDAO);
-	}
-
 	public void delUserById(String id) {
 		if(cache!=null) {
 			try(Jedis jedis = cache.getResource()) {
@@ -67,6 +61,13 @@ public class UsersDBLayer {
 	public void createUser(UserDAO user) {
 		int status = users.createItem(user).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
+
+		try (Jedis jedis = cache.getResource()) {
+			jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			throw new WebApplicationException(500);
+		}
 	}
 	
 	public UserDAO getUserById(String id) {
@@ -89,6 +90,13 @@ public class UsersDBLayer {
 	public void updateUser(UserDAO user) {
 		int status = users.replaceItem(user, user.getId(),new PartitionKey(user.getId()), new CosmosItemRequestOptions()).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
+
+		try (Jedis jedis = cache.getResource()) {
+			jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			throw new WebApplicationException(500);
+		}
 	}
 
 	

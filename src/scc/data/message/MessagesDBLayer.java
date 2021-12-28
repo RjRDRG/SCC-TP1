@@ -53,10 +53,24 @@ public class MessagesDBLayer {
 		int status = messages.deleteItem(msg.getId(), key, new CosmosItemRequestOptions()).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
 	}
-	
+
+	public List<MessageDAO> getMsgsSentByUser(String id) {
+		return messages.queryItems("SELECT * FROM Messages WHERE Messages.user=\"" + id + "\"", new CosmosQueryRequestOptions(), MessageDAO.class).stream().collect(Collectors.toList());
+	}
+
 	public void putMsg(MessageDAO msg) {
 		int status = messages.createItem(msg).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
+
+		try (Jedis jedis = cache.getResource()) {
+			String m = new ObjectMapper().writeValueAsString(msg);
+			Long cnt = jedis.lpush(RECENT_MSGS + msg.getChannel(), m);
+			if (cnt > 20)
+				jedis.ltrim(RECENT_MSGS + msg.getChannel(), 0, 19);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			throw new WebApplicationException(500);
+		}
 	}
 	
 	public MessageDAO getMsgById(String id) {
@@ -105,6 +119,23 @@ public class MessagesDBLayer {
 	public void updateMessage(MessageDAO msg) {
 		int status = messages.replaceItem(msg, msg.getId(), new PartitionKey(msg.getChannel()), new CosmosItemRequestOptions()).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
+	}
+
+	public void deleteChannelsMessages(String channel) {
+		List<MessageDAO> messageDAOS = messages.queryItems(
+				"SELECT * FROM Messages WHERE Messages.channel=\"" + channel + "\"",
+				new CosmosQueryRequestOptions(), MessageDAO.class
+		).stream().collect(Collectors.toList());
+
+		for(MessageDAO messageDAO : messageDAOS) {
+			messages.deleteItem(messageDAO, new CosmosItemRequestOptions());
+		}
+
+		if(cache!=null) {
+			try(Jedis jedis = cache.getResource()) {
+				jedis.del(RECENT_MSGS + channel);
+			}
+		}
 	}
 
 }

@@ -3,6 +3,8 @@ package scc.resources;
 import scc.data.authentication.Credentials;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
+import scc.data.message.MessageDAO;
+import scc.data.message.MessagesDBLayer;
 import scc.data.user.User;
 import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
@@ -21,6 +23,7 @@ public class UsersResource
 	private static boolean started = false;
 	private static ChannelsDBLayer channelsDBLayer;
 	private static UsersDBLayer usersDBLayer;
+	private static MessagesDBLayer messagesDBLayer;
 
 	public UsersResource() {}
 
@@ -28,6 +31,7 @@ public class UsersResource
 		if(!started) {
 			channelsDBLayer = new ChannelsDBLayer();
 			usersDBLayer = new UsersDBLayer();
+			messagesDBLayer = new MessagesDBLayer();
 			started = true;
 		}
 	}
@@ -58,22 +62,16 @@ public class UsersResource
 		usersDBLayer.updateUser(new UserDAO(user));
 	}
 
-
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 		start();
 
 		usersDBLayer.checkCookieUser(session,id);
-		usersDBLayer.discardUserById(id);
-	}
-
-	@DELETE
-	@Path("/force/{id}")
-	public void forceDelete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
-		start();
-
-		usersDBLayer.checkCookieUser(session,id);
+		for(MessageDAO msg : messagesDBLayer.getMsgsSentByUser(id)) {
+			msg.setUser("NA");
+			messagesDBLayer.updateMessage(msg);
+		}
 		usersDBLayer.delUserById(id);
 	}
 

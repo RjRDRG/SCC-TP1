@@ -51,15 +51,16 @@ public class ChannelsDBLayer {
 		if(status >= 400) throw new WebApplicationException(status);
 	}
 
-	public void discardChannelById(String id) {
-		ChannelDAO channelDAO = getChannelById(id);
-		channelDAO.setGarbage(true);
-		updateChannel(channelDAO);
-	}
-
 	public void createChannel(ChannelDAO channel) {
 		int status = channels.createItem(channel).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
+
+		try (Jedis jedis = cache.getResource()) {
+			jedis.set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			throw new WebApplicationException(500);
+		}
 	}
 
 	public ChannelDAO getChannelById(String id) {
@@ -83,5 +84,12 @@ public class ChannelsDBLayer {
 	public void updateChannel(ChannelDAO channel) {
 		int status = channels.replaceItem(channel, channel.getId(), new PartitionKey(channel.getId()), new CosmosItemRequestOptions()).getStatusCode();
 		if(status >= 400) throw new WebApplicationException(status);
+
+		try (Jedis jedis = cache.getResource()) {
+			jedis.set(CHANNEL + channel.getId(), new ObjectMapper().writeValueAsString(channel));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			throw new WebApplicationException(500);
+		}
 	}
 }

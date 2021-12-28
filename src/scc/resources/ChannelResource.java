@@ -87,25 +87,15 @@ public class ChannelResource {
 		channelsDBLayer.updateChannel(new ChannelDAO(channel));
 	}
 
+
 	@DELETE
 	@Path("/{id}")
 	public void delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 		start();
-
 		ChannelDAO channel = channelsDBLayer.getChannelById(id);
 		usersDBLayer.checkCookieUser(session, channel.getOwner());
-		channelsDBLayer.discardChannelById(id);
-	}
-
-
-	@DELETE
-	@Path("/force/{id}")
-	public void forceDelete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
-		start();
-
-		ChannelDAO channel = channelsDBLayer.getChannelById(id);
-		usersDBLayer.checkCookieUser(session, channel.getOwner());
-		channelsDBLayer.delChannelById(id);
+		messagesDBLayer.deleteChannelsMessages(channel.getId());
+		channelsDBLayer.delChannelById(channel.getId());
 	}
 
 }

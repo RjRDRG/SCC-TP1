@@ -4,3 +4,29 @@ az login
 
 #Deploy project
 mvn compile package azure-webapp:deploy
+
+--------------------------------------------
+
+docker login -u rjrdrg -p 5zC5FB0tZI7FU
+
+docker build -t rjrdrg/scc2122-app .
+
+docker push rjrdrg/scc2122-app
+
+az group create --name scc2122-arr --location westeurope
+
+az ad sp create-for-rbac --name http://scc2122-arr --role Contributor
+
+{
+  "appId": "571c0f0b-0ab8-4f02-a66a-40e0969ad8e2",
+  "displayName": "http://scc2122-rra",
+  "name": "571c0f0b-0ab8-4f02-a66a-40e0969ad8e2",
+  "password": "Qupe7jNupbHSl~WqB7dMGRfDlZ0.X2Ibz1",
+  "tenant": "ae7e50a2-ed26-41f7-bd75-f49683f2433a"
+}
+
+az aks create --resource-group scc2122-arr --name scc2122-arr-cluster --node-vm-size Standard_B2s --generate-ssh-keys --node-count 2 --service-principal 571c0f0b-0ab8-4f02-a66a-40e0969ad8e2 --client-secret Qupe7jNupbHSl~WqB7dMGRfDlZ0.X2Ibz1
+
+az aks get-credentials --resource-group scc2122-arr --name scc2122-arr-cluster
+
+kubectl apply -f services.yaml

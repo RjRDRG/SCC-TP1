@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scc2122-arr-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scc2122-arr-redis
+  template:
+    metadata:
+      labels:
+        app: scc2122-arr-redis
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: scc2122-arr-redis
+          image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
+          env:
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "yes"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 6379
+              name: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scc2122-arr-redis
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: scc2122-arr-redis
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azure-managed-disk
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scc2122-arr-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scc2122-arr-app
+  template:
+    metadata:
+      labels:
+        app: scc2122-arr-app
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: scc2122-arr-app
+          image: rjrdrg/scc2122-app
+          volumeMounts:
+          - mountPath: "/mnt/vol"
+            name: mediavolume
+          volumes:
+            - name: mediavolume
+              persistentVolumeClaim:
+                claimName: azure-managed-disk
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 8080
+          env:
+            - name: REDIS_URL
+              value: "scc2122-arr-redis"
+            - name: COSMOSDB_URL
+              value: "https://scc2122rjr.documents.azure.com:443/"
+            - name: COSMOSDB_KEY
+              value: "HmmrNliKPfTxE2B84l5T8tJ5QrmsH25XSQYnbAEoRAUGzAbGfLvw6ShsgmNAFejqKM0ZCf8ou0o22TZAGMwXAA=="
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scc2122-arr-app
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+  selector:
+    app: scc2122-arr-app
