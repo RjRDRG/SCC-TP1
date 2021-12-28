@@ -3,6 +3,7 @@ package scc.resources;
 import scc.data.channel.Channel;
 import scc.data.channel.ChannelDAO;
 import scc.data.channel.ChannelsDBLayer;
+import scc.data.media.MediaVolumeLayer;
 import scc.data.message.Message;
 import scc.data.message.MessageDAO;
 import scc.data.message.MessagesDBLayer;
@@ -31,11 +32,16 @@ public class ChannelResource {
 	public ChannelResource() {}
 
 	public void start() {
-		if(!started) {
-			usersDBLayer = new UsersDBLayer();
-			channelsDBLayer = new ChannelsDBLayer();
-			messagesDBLayer = new MessagesDBLayer();
-			started = true;
+		try {
+			if (!started) {
+				usersDBLayer = new UsersDBLayer();
+				channelsDBLayer = new ChannelsDBLayer();
+				messagesDBLayer = new MessagesDBLayer();
+				started = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebApplicationException(e.getMessage(), 500);
 		}
 	}
 

@@ -26,7 +26,7 @@ public class Cache {
 		poolConfig.setTestWhileIdle(true);
 		poolConfig.setNumTestsPerEvictionRun(3);
 		poolConfig.setBlockWhenExhausted(true);
-		instance = new JedisPool(poolConfig, System.getenv( "REDIS_URL"), 6379, 5000, "", false);
+		instance = new JedisPool(poolConfig, System.getenv( "REDIS_URL"), 6379, 5000,  false);
 		return instance;
 
 	}

@@ -3,7 +3,7 @@
 az login
 
 #Deploy project
-mvn compile package azure-webapp:deploy
+mvn compile package
 
 --------------------------------------------
 
@@ -18,15 +18,52 @@ az group create --name scc2122-arr --location westeurope
 az ad sp create-for-rbac --name http://scc2122-arr --role Contributor
 
 {
-  "appId": "571c0f0b-0ab8-4f02-a66a-40e0969ad8e2",
-  "displayName": "http://scc2122-rra",
-  "name": "571c0f0b-0ab8-4f02-a66a-40e0969ad8e2",
-  "password": "Qupe7jNupbHSl~WqB7dMGRfDlZ0.X2Ibz1",
+  "appId": "75683d9c-55b5-4f83-b291-e063be219891",
+  "displayName": "http://scc2122-arr",
+  "name": "75683d9c-55b5-4f83-b291-e063be219891",
+  "password": "E618GyEw~PPOo6Z55ogsGJlE2Vt3~U6-hV",
   "tenant": "ae7e50a2-ed26-41f7-bd75-f49683f2433a"
 }
 
-az aks create --resource-group scc2122-arr --name scc2122-arr-cluster --node-vm-size Standard_B2s --generate-ssh-keys --node-count 2 --service-principal 571c0f0b-0ab8-4f02-a66a-40e0969ad8e2 --client-secret Qupe7jNupbHSl~WqB7dMGRfDlZ0.X2Ibz1
+
+
+
+az aks create --resource-group scc2122-arr --name scc2122-arr-cluster --node-vm-size Standard_B2s --generate-ssh-keys --node-count 2 --service-principal 75683d9c-55b5-4f83-b291-e063be219891 --client-secret E618GyEw~PPOo6Z55ogsGJlE2Vt3~U6-hV
 
 az aks get-credentials --resource-group scc2122-arr --name scc2122-arr-cluster
 
 kubectl apply -f services.yaml
+
+kubectl get pods
+
+kubectl get services
+
+kubectl logs -f scc2122-arr-app-77d96c8ddc-jpxdl
+
+
+--------------------------------------------------
+
+docker build -t rjrdrg/artillery .
+
+docker push rjrdrg/artillery
+
+az group create --name arr-artillery-europe --location westeurope
+
+az container create --resource-group arr-artillery-europe --name arr-artillery-europe --image
+rjrdrg/artillery --dns-name-label arr-artillery-europe
+
+az container exec -g arr-artillery-europe --name arr-artillery-europe --container-name arr-artillery-europe --exec-command "artillery run --output myreport.json stress.yml"
+az container exec -g arr-artillery-europe --name arr-artillery-europe --container-name arr-artillery-europe --exec-command "artillery report --output myreport.html myreport.json"
+
+
+
+az group create --name arr-artillery-canada --location canadacentral
+
+az container create --resource-group arr-artillery-canada --name arr-artillery-canada --image
+rjrdrg/artillery --dns-name-label arr-artillery-canada
+
+
+
+
+
+docker run -v $(pwd):/config -t nunopreguica/scc2122-test artillery run --output myreport2.json workload1.yml

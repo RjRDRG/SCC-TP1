@@ -7,6 +7,8 @@ import javax.ws.rs.core.Response;
 
 import scc.data.authentication.Login;
 import scc.data.authentication.Session;
+import scc.data.channel.ChannelsDBLayer;
+import scc.data.message.MessagesDBLayer;
 import scc.data.user.UserDAO;
 import scc.data.user.UsersDBLayer;
 
@@ -20,9 +22,14 @@ public class AuthenticationResource {
 	}
 
 	public void start() {
-		if(!started) {
-			usersDBLayer = new UsersDBLayer();
-			started = true;
+		try {
+			if (!started) {
+				usersDBLayer = new UsersDBLayer();
+				started = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebApplicationException(e.getMessage(), 500);
 		}
 	}
 

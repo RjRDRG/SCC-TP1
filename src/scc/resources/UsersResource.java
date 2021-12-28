@@ -28,11 +28,16 @@ public class UsersResource
 	public UsersResource() {}
 
 	public void start() {
-		if(!started) {
-			channelsDBLayer = new ChannelsDBLayer();
-			usersDBLayer = new UsersDBLayer();
-			messagesDBLayer = new MessagesDBLayer();
-			started = true;
+		try {
+			if (!started) {
+				channelsDBLayer = new ChannelsDBLayer();
+				usersDBLayer = new UsersDBLayer();
+				messagesDBLayer = new MessagesDBLayer();
+				started = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebApplicationException(e.getMessage(), 500);
 		}
 	}
 

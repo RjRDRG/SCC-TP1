@@ -1,6 +1,9 @@
 package scc.resources;
 
+import scc.data.channel.ChannelsDBLayer;
 import scc.data.media.MediaVolumeLayer;
+import scc.data.message.MessagesDBLayer;
+import scc.data.user.UsersDBLayer;
 import scc.utils.Hash;
 
 import javax.ws.rs.*;
@@ -18,9 +21,14 @@ public class MediaResource
 	public MediaResource() {}
 
 	public void start() {
-		if(!started) {
-			mediaVolumeLayer = new MediaVolumeLayer();
-			started = true;
+		try {
+			if (!started) {
+				mediaVolumeLayer = new MediaVolumeLayer();
+				started = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebApplicationException(e.getMessage(), 500);
 		}
 	}
 

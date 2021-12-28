@@ -66,7 +66,7 @@ public class UsersDBLayer {
 			jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
-			throw new WebApplicationException(500);
+			throw new WebApplicationException(e.getMessage(), 500);
 		}
 	}
 	
@@ -95,7 +95,7 @@ public class UsersDBLayer {
 			jedis.set(USER + user.getId(), new ObjectMapper().writeValueAsString(user));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
-			throw new WebApplicationException(500);
+			throw new WebApplicationException(e.getMessage(), 500);
 		}
 	}
 

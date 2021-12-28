@@ -23,10 +23,15 @@ public class MessageResource {
 	public MessageResource() {}
 
 	public void start() {
-		if(!started) {
-			messagesDBLayer = new MessagesDBLayer();
-			usersDBLayer = new UsersDBLayer();
-			started = true;
+		try {
+			if (!started) {
+				usersDBLayer = new UsersDBLayer();
+				messagesDBLayer = new MessagesDBLayer();
+				started = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebApplicationException(e.getMessage(), 500);
 		}
 	}
 

@@ -12,9 +12,9 @@ public class MediaVolumeLayer {
 
     public void upload(String id, byte[] contents) {
         try {
-            File file = new File(path + id + ".txt");
+            File file = new File(path + id);
             if (!file.createNewFile()) {
-                throw new WebApplicationException(403);
+                throw new WebApplicationException(409);
             }
             try (FileOutputStream outputStream = new FileOutputStream(file)) {
                 outputStream.write(contents);
@@ -26,7 +26,7 @@ public class MediaVolumeLayer {
     }
 
     public byte[] download(String id) {
-        File file = new File(path + id + ".txt");
+        File file = new File(path + id);
         try (FileInputStream inputStream = new FileInputStream(file)) {
             byte[] bytes = new byte[(int) file.length()];
             inputStream.read(bytes);
@@ -40,7 +40,7 @@ public class MediaVolumeLayer {
     }
 
     public void delete(String id) {
-        File file = new File(path + id + ".txt");
+        File file = new File(path + id);
         if(!file.delete()) {
             throw new WebApplicationException(404);
         }
