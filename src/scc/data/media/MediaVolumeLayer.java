@@ -13,11 +13,10 @@ public class MediaVolumeLayer {
     public void upload(String id, byte[] contents) {
         try {
             File file = new File(path + id);
-            if (!file.createNewFile()) {
-                throw new WebApplicationException(409);
-            }
-            try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                outputStream.write(contents);
+            if (file.createNewFile()) {
+                try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                    outputStream.write(contents);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

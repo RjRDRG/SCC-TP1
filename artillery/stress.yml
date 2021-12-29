@@ -1,5 +1,5 @@
 config:
-  target: 'http://20.61.233.208:8080/SCC-TP1-1.0-SNAPSHOT/rest'
+  target: 'http://20.73.25.188:8080/SCC-TP1-1.0-SNAPSHOT/rest'
 #  target: 'http://localhost:8080/scc2122-backend/rest'
   http:
     timeout: 10

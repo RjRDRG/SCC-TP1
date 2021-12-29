@@ -9,6 +9,7 @@ module.exports = {
   genNewUserReply,
   selectUser,
   selectUserSkewed,
+  selectUserSkewed2,
   genNewChannel,
   selectChannelFromUser,
   selectChannelFromUserSkewed,
@@ -184,6 +185,18 @@ function selectUserSkewed(context, events, done) {
 	} else {
 		delete context.vars.user
 		delete context.vars.pwd
+	}
+	return done()
+}
+
+function selectUserSkewed2(context, events, done) {
+	if( users.length > 0) {
+		let user = users.sampleSkewed()
+		context.vars.user2 = user.id
+		context.vars.pwd2 = user.pwd
+	} else {
+		delete context.vars.user2
+		delete context.vars.pwd2
 	}
 	return done()
 }
