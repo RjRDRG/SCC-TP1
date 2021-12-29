@@ -49,12 +49,18 @@ docker push rjrdrg/artillery
 
 az group create --name arr-artillery-europe --location westeurope
 
-az container create --resource-group arr-artillery-europe --name arr-artillery-europe --image
-rjrdrg/artillery --dns-name-label arr-artillery-europe
+az container create --resource-group arr-artillery-europe --name arr-artillery-europe --image rjrdrg/artillery --ports 22 --dns-name-label arr-artillery-europe
 
-az container exec -g arr-artillery-europe --name arr-artillery-europe --container-name arr-artillery-europe --exec-command "artillery run --output myreport.json stress.yml"
-az container exec -g arr-artillery-europe --name arr-artillery-europe --container-name arr-artillery-europe --exec-command "artillery report --output myreport.html myreport.json"
+az container exec --resource-group arr-artillery-europe --name arr-artillery-europe --exec-command "/bin/sh"
 
+apk add openssh
+
+scp -r root@20.82.75.133:/usr/src/app/myreport.html .
+
+artillery run --output myreport.json stress.yml
+artillery report --output myreport.html myreport.json
+
+az container delete --resource-group arr-artillery-europe --name arr-artillery-europe
 
 
 az group create --name arr-artillery-canada --location canadacentral
@@ -67,3 +73,5 @@ rjrdrg/artillery --dns-name-label arr-artillery-canada
 
 
 docker run -v $(pwd):/config -t nunopreguica/scc2122-test artillery run --output myreport2.json workload1.yml
+
+docker run -v $(pwd):/config -t nunopreguica/scc2122-test artillery report --output myreport.html myreport.json
