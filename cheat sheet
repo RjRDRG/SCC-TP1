@@ -53,24 +53,35 @@ az container create --resource-group arr-artillery-europe --name arr-artillery-e
 
 az container exec --resource-group arr-artillery-europe --name arr-artillery-europe --exec-command "/bin/sh"
 
-apk add openssh
+scp noob@20.61.227.55:/usr/src/app/myreport.html .
 
-scp vivek@20.61.227.55:/usr/src/app/myreport.html .
-
+artillery run create-users.yml
+artillery run create-channels.yml
+artillery run create-messages.yml
 artillery run --output myreport.json stress.yml
 artillery report --output myreport.html myreport.json
 
 az container delete --resource-group arr-artillery-europe --name arr-artillery-europe
 
+------------------------
 
 az group create --name arr-artillery-canada --location canadacentral
 
-az container create --resource-group arr-artillery-canada --name arr-artillery-canada --image
-rjrdrg/artillery --dns-name-label arr-artillery-canada
+az container create --resource-group arr-artillery-canada --name arr-artillery-canada --image rjrdrg/artillery --ports 22 --dns-name-label arr-artillery-canada
 
+az container exec --resource-group arr-artillery-canada --name arr-artillery-canada --exec-command "/bin/sh"
 
+scp noob@20.61.227.55:/usr/src/app/myreport.html .
 
+artillery run create-users.yml
+artillery run create-channels.yml
+artillery run create-messages.yml
+artillery run --output myreport.json stress.yml
+artillery report --output myreport.html myreport.json
 
+az container delete --resource-group arr-artillery-canada --name arr-artillery-canada
+
+------------------------
 
 docker run -v $(pwd):/config -t nunopreguica/scc2122-test artillery run --output myreport2.json workload1.yml
 

@@ -13,7 +13,7 @@ config:
     arrivalRate: 1
     duration: 10
   - name: "Test"
-    arrivalRate: 1
+    arrivalRate: 10
     duration: 60
 
 scenarios:
