@@ -20,7 +20,7 @@ scenarios:
       - loop:                         # Let's create 2000 messages
         - function: "selectUserSkewed"
         - post:                          # First: login as a user
-            url: "/user/auth"
+            url: "/auth"
             headers:
               Content-Type: application/json
             json:
@@ -46,14 +46,16 @@ scenarios:
               as: "imageId"              # capture the reply as image id to be used in user creation
             ifTrue: "hasImage"   # post has image and there is a channel
         - post:                          # Post message
-            url: "/messages"
+            url: "/message"
             headers:
               Content-Type: application/json
               Accept: application/json
             json:                         # NOTE: it is not necessary to send all fields
+              id: "1"
               channel: "{{ channelId }}"
               user: "{{ user }}"
               text: "{{ msgText }}"
-              imageId: "{{ imageId }}"
+              idPhoto: "{{ imageId }}"
+              replied: ""
             ifTrue: "channelId"
         count: 200
