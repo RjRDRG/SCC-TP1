@@ -55,7 +55,7 @@ az container exec --resource-group arr-artillery-europe --name arr-artillery-eur
 
 apk add openssh
 
-scp -r root@20.82.75.133:/usr/src/app/myreport.html .
+scp vivek@20.61.227.55:/usr/src/app/myreport.html .
 
 artillery run --output myreport.json stress.yml
 artillery report --output myreport.html myreport.json
